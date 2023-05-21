@@ -39,7 +39,10 @@ public class Tile : MonoBehaviour
     {
         if (!_isExploding)
         {
-            GameManager.Instance.TileClicked(this);
+            if (!_isShown)
+            {
+                GameManager.Instance.TileClicked(this);
+            }
         }
     }
 

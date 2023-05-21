@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -27,6 +28,7 @@ public class GameManager : MonoBehaviour
     private int maxFlippedTilesAllowed = 2;
 
     private List<Tile> _flippedTiles;
+    private int _tilesInPlay = 0;
 
     private void Awake()
     {
@@ -40,41 +42,35 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         _flippedTiles = new List<Tile>();
+        List<GameObject> allActiveTiles = GetAllActiveTiles();
 
-        List<GameObject> activePanels = GetActivePanels(mainCube4x4);
-        if (activePanels.Count > 0)
+        if (allActiveTiles.Count < 0) return;
+        _tilesInPlay = allActiveTiles.Count;
+
+        var numEmojisToSelect = Mathf.Ceil(allActiveTiles.Count / 2);
+        if (numEmojisToSelect > 0)
         {
-            var allActiveTiles = new List<GameObject>();
-            foreach (var panel in activePanels)
+            emojis.Shuffle();
+            var tileIndecies = new List<int>();
+            for (var i = 0; i < allActiveTiles.Count; i++)
             {
-                allActiveTiles.AddRange(GetActiveTiles(panel));
+                tileIndecies.Add(i);
             }
+            tileIndecies.Shuffle();
 
-            var numEmojisToSelect = Mathf.Ceil(allActiveTiles.Count / 2);
-            if (numEmojisToSelect > 0)
+            var emojiIndex = 0;
+            foreach (var index in tileIndecies)
             {
-                emojis.Shuffle();
-                var tileIndecies = new List<int>();
-                for (var i = 0; i < allActiveTiles.Count; i++)
+                if (emojiIndex >= numEmojisToSelect)
                 {
-                    tileIndecies.Add(i);
+                    emojiIndex = 0;
                 }
-                tileIndecies.Shuffle();
-
-                var emojiIndex = 0;
-                foreach (var index in tileIndecies)
+                var tile = allActiveTiles[index].GetComponent<Tile>();
+                if (tile != null)
                 {
-                    if (emojiIndex >= numEmojisToSelect)
-                    {
-                        emojiIndex = 0;
-                    }
-                    var tile = allActiveTiles[index].GetComponent<Tile>();
-                    if (tile != null)
-                    {
-                        tile.SetEmojiMaterial(emojis[emojiIndex]);
-                    }
-                    emojiIndex++;
+                    tile.SetEmojiMaterial(emojis[emojiIndex]);
                 }
+                emojiIndex++;
             }
         }
     }
@@ -83,6 +79,20 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
 
+    }
+
+    private List<GameObject> GetAllActiveTiles()
+    {
+        var allActiveTiles = new List<GameObject>();
+        List<GameObject> activePanels = GetActivePanels(mainCube4x4);
+        if (activePanels.Count > 0)
+        {
+            foreach (var panel in activePanels)
+            {
+                allActiveTiles.AddRange(GetActiveTilesByPanel(panel));
+            }
+        }
+        return allActiveTiles;
     }
 
     private List<GameObject> GetActivePanels(GameObject cube)
@@ -99,7 +109,7 @@ public class GameManager : MonoBehaviour
         return activePanels;
     }
 
-    private List<GameObject> GetActiveTiles(GameObject panel)
+    private List<GameObject> GetActiveTilesByPanel(GameObject panel)
     {
         var activeTiles = new List<GameObject>();
         for (var i = 0; i < panel.transform.childCount; i++)
@@ -111,6 +121,12 @@ public class GameManager : MonoBehaviour
             }
         }
         return activeTiles;
+    }
+
+    IEnumerator RestartScene()
+    {
+        yield return new WaitForSeconds(1f);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     IEnumerator ResetTiles()
@@ -126,7 +142,13 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         _flippedTiles[0].ExplodeTile();
         _flippedTiles[1].ExplodeTile();
+        _tilesInPlay = _tilesInPlay - 2;
         _flippedTiles.Clear();
+
+        if (_tilesInPlay <= 0)
+        {
+            StartCoroutine(RestartScene());
+        }
     }
 
     public void TileClicked(Tile tile)
