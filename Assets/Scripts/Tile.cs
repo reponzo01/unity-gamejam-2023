@@ -15,23 +15,23 @@ public class Tile : MonoBehaviour
     private void Start()
     {
         _isShown = false;
-        _originalTileRotation = transform.rotation;
+        _originalTileRotation = transform.localRotation;
     }
 
     // Update is called once per frame
     private void Update()
     {
         // 0 = facing front. 180 = facing back.
-        if (_isShown && transform.rotation.eulerAngles.y > 0)
+        if (_isShown && transform.localRotation.eulerAngles.y > 0)
         {
-            transform.rotation =
-                Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(transform.rotation.eulerAngles.x, 0, transform.rotation.eulerAngles.z), 600f * Time.deltaTime);
+            transform.localRotation =
+                Quaternion.RotateTowards(transform.localRotation, Quaternion.Euler(transform.localRotation.eulerAngles.x, 0, transform.localRotation.eulerAngles.z), 600f * Time.deltaTime);
         }
 
-        if (!_isShown && transform.rotation.eulerAngles.y < 180)
+        if (!_isShown && transform.localRotation.eulerAngles.y < 180)
         {
-            transform.rotation =
-                Quaternion.RotateTowards(transform.rotation, _originalTileRotation, 600f * Time.deltaTime);
+            transform.localRotation =
+                Quaternion.RotateTowards(transform.localRotation, _originalTileRotation, 600f * Time.deltaTime);
         }
     }
 
@@ -44,6 +44,12 @@ public class Tile : MonoBehaviour
                 GameManager.Instance.TileClicked(this);
             }
         }
+    }
+
+    private IEnumerator DisableTile()
+    {
+        yield return new WaitForSeconds(1.1f);
+        gameObject.SetActive(false);
     }
 
     public string GetEmojiName()
@@ -84,6 +90,6 @@ public class Tile : MonoBehaviour
 
         if (emojiMeshRenderer != null) emojiMeshRenderer.enabled = false;
         if (tileMeshRenderer != null) tileMeshRenderer.enabled = false;
-        Destroy(gameObject, 1.1f);
+        StartCoroutine(DisableTile());
     }
 }

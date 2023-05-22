@@ -25,10 +25,18 @@ public class GameManager : MonoBehaviour
     private GameObject mainCube4x4;
 
     [SerializeField]
+    private Canvas canvas;
+
+    [SerializeField]
     private int maxFlippedTilesAllowed = 2;
 
     private List<Tile> _flippedTiles;
+    private List<int> _3DPanelNumberList = new List<int> {2, 3, 4, 5, 6};
     private int _tilesInPlay = 0;
+    private bool _is2D = false;
+    private MainCube _mainCube4x4Component;
+    private CameraMovement _cameraMovementComponent;
+    private CanvasManager _canvasManagerComponent;
 
     private void Awake()
     {
@@ -41,7 +49,42 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
+        _mainCube4x4Component = mainCube4x4.GetComponent<MainCube>();
+        _cameraMovementComponent = Camera.main.GetComponent<CameraMovement>();
+        _canvasManagerComponent = canvas.GetComponent<CanvasManager>();
+
+        SwitchTo2D();
+        PopulateActiveTiles();
+    }
+
+    // Update is called once per frame
+    private void Update()
+    {
+        if (!_is2D)
+        {
+            if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                Up();
+            }
+            else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                Down();
+            }
+            else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                Left();
+            }
+            else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+            {
+                Right();
+            }
+        }
+    }
+
+    private void PopulateActiveTiles()
+    {
         _flippedTiles = new List<Tile>();
+        _tilesInPlay = 0;
         List<GameObject> allActiveTiles = GetAllActiveTiles();
 
         if (allActiveTiles.Count < 0) return;
@@ -73,12 +116,6 @@ public class GameManager : MonoBehaviour
                 emojiIndex++;
             }
         }
-    }
-
-    // Update is called once per frame
-    private void Update()
-    {
-
     }
 
     private List<GameObject> GetAllActiveTiles()
@@ -123,13 +160,13 @@ public class GameManager : MonoBehaviour
         return activeTiles;
     }
 
-    IEnumerator RestartScene()
+    private IEnumerator RestartScene()
     {
         yield return new WaitForSeconds(1f);
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    IEnumerator ResetTiles()
+    private IEnumerator ResetTiles()
     {
         yield return new WaitForSeconds(1f);
         _flippedTiles[0].HideTile();
@@ -137,7 +174,7 @@ public class GameManager : MonoBehaviour
         _flippedTiles.Clear();
     }
 
-    IEnumerator ExplodeTiles()
+    private IEnumerator ExplodeTiles()
     {
         yield return new WaitForSeconds(0.5f);
         _flippedTiles[0].ExplodeTile();
@@ -170,5 +207,83 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void SwitchTo3D()
+    {
+        _is2D = false;
+        if (_mainCube4x4Component != null)
+        {
+            _mainCube4x4Component.SwitchTo3D();
+        }
+
+        if (_cameraMovementComponent != null)
+        {
+            _cameraMovementComponent.SwitchTo3D();
+        }
+
+        if (_canvasManagerComponent != null)
+        {
+            _canvasManagerComponent.SwitchTo3D();
+        }
+    }
+
+    public void SwitchTo2D()
+    {
+        _is2D = true;
+        if (_mainCube4x4Component != null)
+        {
+            _mainCube4x4Component.SwitchTo2D();
+        }
+
+        if (_cameraMovementComponent != null)
+        {
+            _cameraMovementComponent.SwitchTo2D();
+        }
+
+        if (_canvasManagerComponent != null)
+        {
+            _canvasManagerComponent.SwitchTo2D();
+        }
+
+        EnableRandomPanels(1);
+    }
+
+    public void Up()
+    {
+        _cameraMovementComponent.LookUp();
+    }
+
+    public void Down()
+    {
+        _cameraMovementComponent.LookDown();
+    }
+
+    public void Left()
+    {
+        _mainCube4x4Component.TurnLeft();
+    }
+
+    public void Right()
+    {
+        _mainCube4x4Component.TurnRight();
+    }
+
+    public void EnableRandomPanels(int numberOfPanelsToEnable)
+    {
+        _mainCube4x4Component.DisablePanel(2);
+        _mainCube4x4Component.DisablePanel(3);
+        _mainCube4x4Component.DisablePanel(4);
+        _mainCube4x4Component.DisablePanel(5);
+        _mainCube4x4Component.DisablePanel(6);
+        _3DPanelNumberList.Shuffle();
+
+        _mainCube4x4Component.EnablePanel(1);
+        for (int i = 0; i < numberOfPanelsToEnable - 1; i++)
+        {
+            _mainCube4x4Component.EnablePanel(_3DPanelNumberList[i]);
+        }
+
+        PopulateActiveTiles();
     }
 }
