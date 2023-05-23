@@ -12,6 +12,7 @@ public class Tile : MonoBehaviour
 
     public Utilities.PowerupEnum powerup = Utilities.PowerupEnum.none;
     public bool isShown;
+    public int tileIndex;
 
     // Start is called before the first frame update
     private void Start()

@@ -119,14 +119,13 @@ public class GameManager : MonoBehaviour
                 {
                     tile.HideTile();
                     tile.SetTileEmoji(emojis[emojiIndex]);
+                    tile.tileIndex = index;
                 }
                 emojiIndex++;
             }
         }
 
         // TODO: This would be better extracted into a method since it's setting the powerups
-        // TODO: BUG: Adding a powerup to a random index means I need to also get that emoji's
-        // pair and put a powerup there too.
         if (allActiveTiles.Count > 16)
         {
             var numPowerupsPerPanel = 6; // Keep this an even number!
@@ -217,7 +216,6 @@ public class GameManager : MonoBehaviour
         _flippedTiles.Clear();
     }
 
-    // TODO: Take in a list of tiles instead
     private IEnumerator ExplodeTiles(List<Tile> tiles)
     {
         yield return new WaitForSeconds(0.5f);
@@ -278,26 +276,9 @@ public class GameManager : MonoBehaviour
             case Utilities.PowerupEnum.match:
                 if (_flippedTiles.Count > 0)
                 {
-                    var tilesToExplode = new List<Tile>();
-                    tilesToExplode.AddRange(_flippedTiles);
+                    AutomatchFlippedTiles(_flippedTiles);
 
-                    List<GameObject> allActiveTilesGameObjects = GetAllActiveTiles();
-                    foreach (var flippedTile in _flippedTiles)
-                    {
-                        foreach (var activeTileGameObject in allActiveTilesGameObjects)
-                        {
-                            var tile = activeTileGameObject.GetComponent<Tile>();
-                            if (tile != null && !tile.isShown)
-                            {
-                                if (tile.GetEmojiName().Equals(flippedTile.GetEmojiName()))
-                                {
-                                    tile.ShowTile();
-                                    tilesToExplode.Add(tile);
-                                }
-                            }
-                        }
-                    }
-                    StartCoroutine(ExplodeTiles(tilesToExplode));
+                    // TODO: Only deactivate if multiselect powerup is not active
                     DectivatePowerup(powerupEnum);
                 }
                 break;
@@ -308,11 +289,47 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void AutomatchFlippedTiles(List<Tile> flippedTiles)
+    {
+        var tilesToExplode = new List<Tile>();
+        tilesToExplode.AddRange(flippedTiles);
+
+        List<GameObject> allActiveTilesGameObjects = GetAllActiveTiles();
+        foreach (var flippedTile in flippedTiles)
+        {
+            foreach (var activeTileGameObject in allActiveTilesGameObjects)
+            {
+                var tile = activeTileGameObject.GetComponent<Tile>();
+                if (tile != null && !tile.isShown)
+                {
+                    if (TilesMatch(tile, flippedTile))
+                    {
+                        tile.ShowTile();
+                        tilesToExplode.Add(tile);
+                    }
+                }
+            }
+        }
+        StartCoroutine(ExplodeTiles(tilesToExplode));
+    }
+
+    private bool TilesMatch(Tile tile1, Tile tile2)
+    {
+        if (tile1.GetEmojiName().Equals(tile2.GetEmojiName()) &&
+            tile1.tileIndex != tile2.tileIndex &&
+            !tile1.IsPowerup() &&
+            !tile2.IsPowerup())
+        {
+            return true;
+        }
+        return false;
+    }
+
     public void TileClicked(Tile tile)
     {
         if (isPowerupInstructionsActive) return;
 
-        if (_flippedTiles.Count < maxFlippedTilesAllowed)
+        if (_powerupMatchActive)
         {
             tile.ShowTile();
             if (tile.IsPowerup())
@@ -322,18 +339,38 @@ public class GameManager : MonoBehaviour
             }
             else
             {
+                // TODO: HandleAutomatch
                 _flippedTiles.Add(tile);
-
-                // TODO: Technically, the following code does not support more than 2 max tiles flipped allowed
-                if (_flippedTiles.Count == maxFlippedTilesAllowed)
+                AutomatchFlippedTiles(_flippedTiles);
+                // TODO: Only deactivate if multiselect powerup is not active
+                DectivatePowerup(Utilities.PowerupEnum.match);
+            }
+        }
+        else
+        {
+            if (_flippedTiles.Count < maxFlippedTilesAllowed)
+            {
+                tile.ShowTile();
+                if (tile.IsPowerup())
                 {
-                    if (!_flippedTiles[0].GetEmojiName().Equals(_flippedTiles[1].GetEmojiName()))
+                    ActivatePowerup(tile.powerup);
+                    StartCoroutine(ExplodeTiles(new List<Tile>{tile}));
+                }
+                else
+                {
+                    _flippedTiles.Add(tile);
+
+                    // TODO: Technically, the following code does not support more than 2 max tiles flipped allowed
+                    if (_flippedTiles.Count == maxFlippedTilesAllowed)
                     {
-                        StartCoroutine(ResetTiles(new List<Tile>{_flippedTiles[0], _flippedTiles[1]}));
-                    }
-                    else
-                    {
-                        StartCoroutine(ExplodeTiles(new List<Tile>{_flippedTiles[0], _flippedTiles[1]}));
+                        if (TilesMatch(_flippedTiles[0], _flippedTiles[1]))
+                        {
+                            StartCoroutine(ExplodeTiles(new List<Tile>{_flippedTiles[0], _flippedTiles[1]}));
+                        }
+                        else
+                        {
+                            StartCoroutine(ResetTiles(new List<Tile>{_flippedTiles[0], _flippedTiles[1]}));
+                        }
                     }
                 }
             }
