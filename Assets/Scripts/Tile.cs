@@ -4,17 +4,19 @@ using UnityEngine;
 
 public class Tile : MonoBehaviour
 {
-    private string _emojiName;
-    private bool _isShown;
+    private string _tileMaterialName;
     private bool _isExploding;
     private Quaternion _originalTileRotation;
     private string _emojiGameObjectName = "Emoji";
     private string _explosionGameObjectName = "Explosion";
 
+    public Utilities.PowerupEnum powerup = Utilities.PowerupEnum.none;
+    public bool isShown;
+
     // Start is called before the first frame update
     private void Start()
     {
-        _isShown = false;
+        isShown = false;
         _originalTileRotation = transform.localRotation;
     }
 
@@ -22,13 +24,13 @@ public class Tile : MonoBehaviour
     private void Update()
     {
         // 0 = facing front. 180 = facing back.
-        if (_isShown && transform.localRotation.eulerAngles.y > 0)
+        if (isShown && transform.localRotation.eulerAngles.y > 0)
         {
             transform.localRotation =
                 Quaternion.RotateTowards(transform.localRotation, Quaternion.Euler(transform.localRotation.eulerAngles.x, 0, transform.localRotation.eulerAngles.z), 600f * Time.deltaTime);
         }
 
-        if (!_isShown && transform.localRotation.eulerAngles.y < 180)
+        if (!isShown && transform.localRotation.eulerAngles.y < 180)
         {
             transform.localRotation =
                 Quaternion.RotateTowards(transform.localRotation, _originalTileRotation, 600f * Time.deltaTime);
@@ -39,7 +41,7 @@ public class Tile : MonoBehaviour
     {
         if (!_isExploding)
         {
-            if (!_isShown)
+            if (!isShown)
             {
                 GameManager.Instance.TileClicked(this);
             }
@@ -52,29 +54,52 @@ public class Tile : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public string GetEmojiName()
-    {
-        return _emojiName;
-    }
-
-    public void SetEmojiMaterial(Material emojiMat)
+    private void SetTileMaterial(Material mat)
     {
         var renderer = transform.Find(_emojiGameObjectName).GetComponent<Renderer>();
         if (renderer != null)
         {
-            renderer.material = emojiMat;
-            _emojiName = emojiMat.name.Replace("(Instance)", "");
+            renderer.material = mat;
+            _tileMaterialName = mat.name.Replace("(Instance)", "");
+        }
+    }
+
+    public string GetEmojiName()
+    {
+        return _tileMaterialName;
+    }
+
+    public void SetTileEmoji(Material emojiMat)
+    {
+        SetTileMaterial(emojiMat);
+    }
+
+    public void SetTilePowerup(Material powerupMat)
+    {
+        SetTileMaterial(powerupMat);
+        // TODO: Not the prettiest way to do this
+        if (_tileMaterialName.Equals("PowerupBomb"))
+        {
+            powerup = Utilities.PowerupEnum.bomb;
+        }
+        else if (_tileMaterialName.Equals("PowerupMatch"))
+        {
+            powerup = Utilities.PowerupEnum.match;
+        }
+        else if (_tileMaterialName.Equals("PowerupMultiselect"))
+        {
+            powerup = Utilities.PowerupEnum.multiselect;
         }
     }
 
     public void ShowTile()
     {
-        _isShown = true;
+        isShown = true;
     }
 
     public void HideTile()
     {
-        _isShown = false;
+        isShown = false;
     }
 
     public void ExplodeTile()
@@ -91,5 +116,10 @@ public class Tile : MonoBehaviour
         if (emojiMeshRenderer != null) emojiMeshRenderer.enabled = false;
         if (tileMeshRenderer != null) tileMeshRenderer.enabled = false;
         StartCoroutine(DisableTile());
+    }
+
+    public bool IsPowerup()
+    {
+        return powerup != Utilities.PowerupEnum.none;
     }
 }

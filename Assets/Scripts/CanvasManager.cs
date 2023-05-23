@@ -18,13 +18,40 @@ public class CanvasManager : MonoBehaviour
 
     public void SwitchTo3D()
     {
-        //Debug.Log("Switching canvas to 3D");
         transform.Find("3DControls").gameObject.SetActive(true);
     }
 
     public void SwitchTo2D()
     {
-        //Debug.Log("Switching canvas to 2D");
         transform.Find("3DControls").gameObject.SetActive(false);
+    }
+
+    public void ShowPowerupIcon(Utilities.PowerupEnum powerup, bool show)
+    {
+        switch (powerup)
+        {
+            case Utilities.PowerupEnum.match:
+                transform.Find("Powerups").Find("Match").gameObject.SetActive(show);
+                break;
+            case Utilities.PowerupEnum.multiselect:
+                transform.Find("Powerups").Find("Multiselect").gameObject.SetActive(show);
+                break;
+            default:
+                break;
+        }
+    }
+
+    // Method name is used in UI
+    public void ShowPowerupInstructions(GameObject powerupInstructions)
+    {
+        powerupInstructions.SetActive(true);
+        GameManager.Instance.isPowerupInstructionsActive = true;
+    }
+
+    // Method name is used in UI
+    public void HidePowerupInstructions(GameObject powerupInstructions)
+    {
+        powerupInstructions.SetActive(false);
+        GameManager.Instance.isPowerupInstructionsActive = false;
     }
 }

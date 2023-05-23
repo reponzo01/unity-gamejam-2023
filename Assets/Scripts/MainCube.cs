@@ -28,6 +28,7 @@ public class MainCube : MonoBehaviour
     public void SwitchTo3D()
     {
         _rotateYAngle = 45f;
+        EnablePanel(2);
         transform.Find("Panel1").Find("Light").gameObject.SetActive(true);
     }
 

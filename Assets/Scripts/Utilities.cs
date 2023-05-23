@@ -17,4 +17,15 @@ public static class Utilities
             ts[r] = tmp;
         }
     }
+
+    /// <summary>
+    /// Powerup Enum
+    /// </summary>
+    public enum PowerupEnum
+    {
+        bomb,
+        match,
+        multiselect,
+        none
+    }
 }
