@@ -4,14 +4,14 @@ using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
 {
-    private Vector3 _cameraLookDownPosition = new Vector3(0f, 4f, -8f);
-    private Vector3 _cameraLookUpPosition = new Vector3(0f, -4f, -8f);
+    private Vector3 _cameraLookDownPosition = new Vector3(0f, 6.5f, -8f);
+    private Vector3 _cameraLookUpPosition = new Vector3(0f, -6.5f, -8f);
     private Vector3 _camera2DPosition = new Vector3(0f, 0f, -8f);
     private Vector3 _cameraRequestedPosition = new Vector3(0f, 0f, 0f);
-    private float _cameraLookDownRotationAngle = 25f;
-    private float _cameraLookUpRotationAngle = -25f;
+    private float _cameraLookDownRotationAngle = 40f;
+    private float _cameraLookUpRotationAngle = -40f;
     private float _cameraRequestedRotationAngle = 0f;
-    private float _moveSpeed = 50f;
+    private float _moveSpeed = 100f;
     private float _rotateSpeed = 600f;
 
     // Start is called before the first frame update

@@ -1,9 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class CanvasManager : MonoBehaviour
 {
+    [SerializeField] private GameObject threeDControls;
+    [SerializeField] private GameObject powerupMatchIcon;
+    [SerializeField] private GameObject powerupMultiselectIcon;
+    [SerializeField] private TextMeshProUGUI multiselectTilesAvailableText;
+    [SerializeField] private TextMeshProUGUI multiselectInstructionsText;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -18,12 +25,12 @@ public class CanvasManager : MonoBehaviour
 
     public void SwitchTo3D()
     {
-        transform.Find("3DControls").gameObject.SetActive(true);
+        threeDControls.SetActive(true);
     }
 
     public void SwitchTo2D()
     {
-        transform.Find("3DControls").gameObject.SetActive(false);
+        threeDControls.SetActive(false);
     }
 
     public void ShowPowerupIcon(Utilities.PowerupEnum powerup, bool show)
@@ -31,17 +38,17 @@ public class CanvasManager : MonoBehaviour
         switch (powerup)
         {
             case Utilities.PowerupEnum.match:
-                transform.Find("Powerups").Find("Match").gameObject.SetActive(show);
+                powerupMatchIcon.SetActive(show);
                 break;
             case Utilities.PowerupEnum.multiselect:
-                transform.Find("Powerups").Find("Multiselect").gameObject.SetActive(show);
+                powerupMultiselectIcon.SetActive(show);
                 break;
             default:
                 break;
         }
     }
 
-    // Method name is used in UI
+    // Method name is used in UI for image click
     public void ShowPowerupInstructions(GameObject powerupInstructions)
     {
         powerupInstructions.SetActive(true);
@@ -53,5 +60,11 @@ public class CanvasManager : MonoBehaviour
     {
         powerupInstructions.SetActive(false);
         GameManager.Instance.isPowerupInstructionsActive = false;
+    }
+
+    public void UpdateMultiselectTilesAvailable(int tilesAvailable)
+    {
+        multiselectTilesAvailableText.SetText(tilesAvailable.ToString());
+        multiselectInstructionsText.SetText($"Select up to {tilesAvailable} tiles at once!");
     }
 }

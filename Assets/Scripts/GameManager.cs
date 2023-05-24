@@ -33,6 +33,9 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private int maxFlippedTilesAllowed = 2;
 
+    [SerializeField]
+    private int powerupMultiselectDefaultTiles = 4;
+
     private List<Tile> _flippedTiles;
     private List<int> _3DPanelNumberList = new List<int> {2, 3, 4, 5, 6};
     private int _tilesOnBoard = 0;
@@ -42,7 +45,9 @@ public class GameManager : MonoBehaviour
     private CanvasManager _canvasManagerComponent;
     private bool _powerupMatchActive = false;
     private bool _powerupMultiselectActive = false;
+
     public bool isPowerupInstructionsActive = false;
+    public int powerupMultiselectTilesAvailable = 0;
 
     private void Awake()
     {
@@ -128,7 +133,7 @@ public class GameManager : MonoBehaviour
         // TODO: This would be better extracted into a method since it's setting the powerups
         if (allActiveTiles.Count > 16)
         {
-            var numPowerupsPerPanel = 6; // Keep this an even number!
+            var numPowerupsPerPanel = 2; // Keep this an even number!
             var numberOfPowerups = Mathf.Ceil(allActiveTiles.Count / 16 * numPowerupsPerPanel);
             tileIndecies.Shuffle();
 
@@ -209,22 +214,26 @@ public class GameManager : MonoBehaviour
     private IEnumerator ResetTiles(List<Tile> tiles)
     {
         yield return new WaitForSeconds(1f);
-        foreach (var tile in tiles)
+        var safeList = new List<Tile>();
+        safeList.AddRange(tiles);
+        foreach (var tile in safeList)
         {
             tile.HideTile();
+            _flippedTiles.Remove(tile);
         }
-        _flippedTiles.Clear();
     }
 
     private IEnumerator ExplodeTiles(List<Tile> tiles)
     {
         yield return new WaitForSeconds(0.5f);
-        foreach (var tile in tiles)
+        var safeList = new List<Tile>();
+        safeList.AddRange(tiles);
+        foreach (var tile in safeList)
         {
             tile.ExplodeTile();
+            _flippedTiles.Remove(tile);
         }
         _tilesOnBoard = _tilesOnBoard - tiles.Count;
-        _flippedTiles.Clear();
 
         if (_tilesOnBoard <= 0)
         {
@@ -238,35 +247,32 @@ public class GameManager : MonoBehaviour
         {
             case Utilities.PowerupEnum.match:
                 _powerupMatchActive = true;
-                _canvasManagerComponent.ShowPowerupIcon(powerupEnum, true);
-                PowerupInitialize(powerupEnum);
                 break;
             case Utilities.PowerupEnum.multiselect:
                 _powerupMultiselectActive = true;
-                _canvasManagerComponent.ShowPowerupIcon(powerupEnum, true);
-                PowerupInitialize(powerupEnum);
                 break;
             default:
                 break;
         }
+        _canvasManagerComponent.ShowPowerupIcon(powerupEnum, true);
+        PowerupInitialize(powerupEnum);
     }
 
-    private void DectivatePowerup(Utilities.PowerupEnum powerupEnum)
+    private void DeactivatePowerup(Utilities.PowerupEnum powerupEnum)
     {
         switch (powerupEnum)
         {
             case Utilities.PowerupEnum.match:
                 _powerupMatchActive = false;
-                _canvasManagerComponent.ShowPowerupIcon(powerupEnum, false);
                 break;
             case Utilities.PowerupEnum.multiselect:
                 _powerupMultiselectActive = false;
-                _canvasManagerComponent.ShowPowerupIcon(powerupEnum, false);
-                PowerupInitialize(powerupEnum);
+                powerupMultiselectTilesAvailable = 0;
                 break;
             default:
                 break;
         }
+        _canvasManagerComponent.ShowPowerupIcon(powerupEnum, false);
     }
 
     private void PowerupInitialize(Utilities.PowerupEnum powerupEnum)
@@ -279,10 +285,12 @@ public class GameManager : MonoBehaviour
                     AutomatchFlippedTiles(_flippedTiles);
 
                     // TODO: Only deactivate if multiselect powerup is not active
-                    DectivatePowerup(powerupEnum);
+                    DeactivatePowerup(powerupEnum);
                 }
                 break;
             case Utilities.PowerupEnum.multiselect:
+                powerupMultiselectTilesAvailable += powerupMultiselectDefaultTiles;
+                _canvasManagerComponent.UpdateMultiselectTilesAvailable(powerupMultiselectTilesAvailable);
                 break;
             default:
                 break;
@@ -311,6 +319,26 @@ public class GameManager : MonoBehaviour
             }
         }
         StartCoroutine(ExplodeTiles(tilesToExplode));
+    }
+
+    private void EliminateMatchedFlippedTiles(List<Tile> flippedTiles)
+    {
+        var tilesToExplode = new List<Tile>();
+        for (var i = 0; i < flippedTiles.Count; i++)
+        {
+            for (var j = i + 1; j < flippedTiles.Count; j++)
+            {
+                if (TilesMatch(flippedTiles[i], flippedTiles[j]))
+                {
+                    tilesToExplode.Add(flippedTiles[i]);
+                    tilesToExplode.Add(flippedTiles[j]);
+                }
+            }
+        }
+        if (tilesToExplode.Count > 0)
+        {
+            StartCoroutine(ExplodeTiles(tilesToExplode));
+        }
     }
 
     private bool TilesMatch(Tile tile1, Tile tile2)
@@ -343,7 +371,32 @@ public class GameManager : MonoBehaviour
                 _flippedTiles.Add(tile);
                 AutomatchFlippedTiles(_flippedTiles);
                 // TODO: Only deactivate if multiselect powerup is not active
-                DectivatePowerup(Utilities.PowerupEnum.match);
+                DeactivatePowerup(Utilities.PowerupEnum.match);
+            }
+        }
+        else if (_powerupMultiselectActive)
+        {
+            tile.ShowTile();
+            if (tile.IsPowerup())
+            {
+                ActivatePowerup(tile.powerup);
+                StartCoroutine(ExplodeTiles(new List<Tile>{tile}));
+            }
+            else
+            {
+                // TODO: HandleMultiselect
+                _flippedTiles.Add(tile);
+                powerupMultiselectTilesAvailable--;
+                _canvasManagerComponent.UpdateMultiselectTilesAvailable(powerupMultiselectTilesAvailable);
+                if (_flippedTiles.Count > 1)
+                {
+                    EliminateMatchedFlippedTiles(_flippedTiles);
+                }
+                if (powerupMultiselectTilesAvailable == 0)
+                {
+                    StartCoroutine(ResetTiles(_flippedTiles));
+                    DeactivatePowerup(Utilities.PowerupEnum.multiselect);
+                }
             }
         }
         else
