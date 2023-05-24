@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class MainCube : MonoBehaviour
 {
+    [SerializeField]
+    private GameObject panel1Light;
+
     private float _rotateYAngle = 0f;
     private float _rotateSpeed = 600f;
+    private bool _rotating = false;
 
     // Start is called before the first frame update
     void Start()
@@ -16,12 +20,18 @@ public class MainCube : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //if (!Mathf.Approximately(transform.eulerAngles.y, _rotateYAngle))
-        if (transform.rotation != Quaternion.Euler(transform.rotation.eulerAngles.x, _rotateYAngle, transform.rotation.eulerAngles.z))
+        if (_rotating)
         {
-            //Debug.Log($"Rotating main cube ({transform.eulerAngles.y}) to {_rotateYAngle}");
-            transform.rotation =
-                Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(transform.rotation.eulerAngles.x, _rotateYAngle, transform.rotation.eulerAngles.z), _rotateSpeed * Time.deltaTime);
+            if (transform.rotation != Quaternion.Euler(transform.rotation.eulerAngles.x, _rotateYAngle, transform.rotation.eulerAngles.z))
+            {
+                //Debug.Log($"Rotating main cube ({transform.eulerAngles.y}) to {_rotateYAngle}");
+                transform.rotation =
+                    Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(transform.rotation.eulerAngles.x, _rotateYAngle, transform.rotation.eulerAngles.z), _rotateSpeed * Time.deltaTime);
+            }
+            else
+            {
+                _rotating = false;
+            }
         }
     }
 
@@ -29,23 +39,27 @@ public class MainCube : MonoBehaviour
     {
         _rotateYAngle = 45f;
         EnablePanel(2);
-        transform.Find("Panel1").Find("Light").gameObject.SetActive(true);
+        panel1Light.SetActive(true);
+        _rotating = true;
     }
 
     public void SwitchTo2D()
     {
         _rotateYAngle = 0f;
-        transform.Find("Panel1").Find("Light").gameObject.SetActive(false);
+        panel1Light.SetActive(false);
+        _rotating = true;
     }
 
     public void TurnLeft()
     {
         _rotateYAngle += 90f;
+        _rotating = true;
     }
 
     public void TurnRight()
     {
         _rotateYAngle -= 90f;
+        _rotating = true;
     }
 
     public void EnablePanel(int panelNumber)

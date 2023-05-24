@@ -13,6 +13,8 @@ public class CameraMovement : MonoBehaviour
     private float _cameraRequestedRotationAngle = 0f;
     private float _moveSpeed = 100f;
     private float _rotateSpeed = 600f;
+    private bool _moving = false;
+    private bool _rotating = false;
 
     // Start is called before the first frame update
     void Start()
@@ -23,16 +25,28 @@ public class CameraMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!Mathf.Approximately(Camera.main.transform.position.y, _cameraRequestedPosition.y))
+        if (_moving)
         {
-            //Debug.Log("Moving Cam");
-            Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, _cameraRequestedPosition, _moveSpeed * Time.deltaTime);
+            if (!Mathf.Approximately(Camera.main.transform.position.y, _cameraRequestedPosition.y))
+            {
+                Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, _cameraRequestedPosition, _moveSpeed * Time.deltaTime);
+            }
+            else
+            {
+                _moving = false;
+            }
         }
 
-        if (Camera.main.transform.rotation != Quaternion.Euler(_cameraRequestedRotationAngle, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z))
+        if (_rotating)
         {
-            //Debug.Log($"Rotating Cam ({Camera.main.transform.rotation.eulerAngles.x}) to {_cameraRequestedRotationAngle}");
-            Camera.main.transform.rotation = Quaternion.RotateTowards(Camera.main.transform.rotation, Quaternion.Euler(_cameraRequestedRotationAngle, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z), _rotateSpeed * Time.deltaTime);
+            if (Camera.main.transform.rotation != Quaternion.Euler(_cameraRequestedRotationAngle, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z))
+            {
+                Camera.main.transform.rotation = Quaternion.RotateTowards(Camera.main.transform.rotation, Quaternion.Euler(_cameraRequestedRotationAngle, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z), _rotateSpeed * Time.deltaTime);
+            }
+            else
+            {
+                _rotating = false;
+            }
         }
     }
 
@@ -41,6 +55,8 @@ public class CameraMovement : MonoBehaviour
         Camera.main.orthographicSize = 4.5f;
         _cameraRequestedPosition = _cameraLookDownPosition;
         _cameraRequestedRotationAngle = _cameraLookDownRotationAngle;
+        _moving = true;
+        _rotating = true;
     }
 
     public void SwitchTo2D()
@@ -48,17 +64,23 @@ public class CameraMovement : MonoBehaviour
         Camera.main.orthographicSize = 3f;
         _cameraRequestedPosition = _camera2DPosition;
         _cameraRequestedRotationAngle = 0f;
+        _moving = true;
+        _rotating = true;
     }
 
     public void LookUp()
     {
         _cameraRequestedPosition = _cameraLookUpPosition;
         _cameraRequestedRotationAngle = _cameraLookUpRotationAngle;
+        _moving = true;
+        _rotating = true;
     }
 
     public void LookDown()
     {
         _cameraRequestedPosition = _cameraLookDownPosition;
         _cameraRequestedRotationAngle = _cameraLookDownRotationAngle;
+        _moving = true;
+        _rotating = true;
     }
 }
