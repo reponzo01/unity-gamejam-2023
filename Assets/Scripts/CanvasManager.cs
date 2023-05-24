@@ -49,10 +49,10 @@ public class CanvasManager : MonoBehaviour
     }
 
     // Method name is used in UI for image click
-    public void ShowPowerupInstructions(GameObject powerupInstructions)
+    public void TogglePowerupInstructions(GameObject powerupInstructions)
     {
-        powerupInstructions.SetActive(true);
-        GameManager.Instance.isPowerupInstructionsActive = true;
+        powerupInstructions.SetActive(!powerupInstructions.activeSelf);
+        GameManager.Instance.isPowerupInstructionsActive = powerupInstructions.activeSelf;
     }
 
     // Method name is used in UI

@@ -133,7 +133,7 @@ public class GameManager : MonoBehaviour
         // TODO: This would be better extracted into a method since it's setting the powerups
         if (allActiveTiles.Count > 16)
         {
-            var numPowerupsPerPanel = 2; // Keep this an even number!
+            var numPowerupsPerPanel = 4; // Keep this an even number!
             var numberOfPowerups = Mathf.Ceil(allActiveTiles.Count / 16 * numPowerupsPerPanel);
             tileIndecies.Shuffle();
 
@@ -263,16 +263,20 @@ public class GameManager : MonoBehaviour
         switch (powerupEnum)
         {
             case Utilities.PowerupEnum.match:
-                _powerupMatchActive = false;
+                if (!_powerupMultiselectActive || powerupMultiselectTilesAvailable == 0)
+                {
+                    _powerupMatchActive = false;
+                    _canvasManagerComponent.ShowPowerupIcon(powerupEnum, false);
+                }
                 break;
             case Utilities.PowerupEnum.multiselect:
                 _powerupMultiselectActive = false;
                 powerupMultiselectTilesAvailable = 0;
+                _canvasManagerComponent.ShowPowerupIcon(powerupEnum, false);
                 break;
             default:
                 break;
         }
-        _canvasManagerComponent.ShowPowerupIcon(powerupEnum, false);
     }
 
     private void PowerupInitialize(Utilities.PowerupEnum powerupEnum)
@@ -283,8 +287,6 @@ public class GameManager : MonoBehaviour
                 if (_flippedTiles.Count > 0)
                 {
                     AutomatchFlippedTiles(_flippedTiles);
-
-                    // TODO: Only deactivate if multiselect powerup is not active
                     DeactivatePowerup(powerupEnum);
                 }
                 break;
@@ -353,10 +355,20 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
+    private void DecrementMultiselectTilesAvailable()
+    {
+        if (_powerupMultiselectActive)
+        {
+            powerupMultiselectTilesAvailable--;
+            _canvasManagerComponent.UpdateMultiselectTilesAvailable(powerupMultiselectTilesAvailable);
+        }
+    }
+
     public void TileClicked(Tile tile)
     {
         if (isPowerupInstructionsActive) return;
 
+        DecrementMultiselectTilesAvailable();
         if (_powerupMatchActive)
         {
             tile.ShowTile();
@@ -370,7 +382,6 @@ public class GameManager : MonoBehaviour
                 // TODO: HandleAutomatch
                 _flippedTiles.Add(tile);
                 AutomatchFlippedTiles(_flippedTiles);
-                // TODO: Only deactivate if multiselect powerup is not active
                 DeactivatePowerup(Utilities.PowerupEnum.match);
             }
         }
@@ -386,21 +397,15 @@ public class GameManager : MonoBehaviour
             {
                 // TODO: HandleMultiselect
                 _flippedTiles.Add(tile);
-                powerupMultiselectTilesAvailable--;
-                _canvasManagerComponent.UpdateMultiselectTilesAvailable(powerupMultiselectTilesAvailable);
                 if (_flippedTiles.Count > 1)
                 {
                     EliminateMatchedFlippedTiles(_flippedTiles);
-                }
-                if (powerupMultiselectTilesAvailable == 0)
-                {
-                    StartCoroutine(ResetTiles(_flippedTiles));
-                    DeactivatePowerup(Utilities.PowerupEnum.multiselect);
                 }
             }
         }
         else
         {
+            // Normal gameplay
             if (_flippedTiles.Count < maxFlippedTilesAllowed)
             {
                 tile.ShowTile();
@@ -427,6 +432,14 @@ public class GameManager : MonoBehaviour
                     }
                 }
             }
+        }
+        if (powerupMultiselectTilesAvailable == 0 && _powerupMultiselectActive)
+        {
+            if (!_powerupMatchActive)
+            {
+                StartCoroutine(ResetTiles(_flippedTiles));
+            }
+            DeactivatePowerup(Utilities.PowerupEnum.multiselect);
         }
     }
 
@@ -509,4 +522,33 @@ public class GameManager : MonoBehaviour
 
         PopulateActiveTiles();
     }
+
+    // TESTING
+    public void ShowAllTiles()
+    {
+        var tiles = GetAllActiveTiles();
+        foreach (var tileGameObject in tiles)
+        {
+            var tile = tileGameObject.GetComponent<Tile>();
+            if (tile != null)
+            {
+                tile.ShowTile();
+            }
+        }
+    }
+
+    // TESTING
+    public void HideAllTiles()
+    {
+        var tiles = GetAllActiveTiles();
+        foreach (var tileGameObject in tiles)
+        {
+            var tile = tileGameObject.GetComponent<Tile>();
+            if (tile != null)
+            {
+                tile.HideTile();
+            }
+        }
+    }
+
 }
