@@ -4,11 +4,12 @@ using UnityEngine;
 
 public class Tile : MonoBehaviour
 {
-    private string _tileMaterialName;
-    private bool _isExploding;
     private Quaternion _originalTileRotation;
+    private string _tileMaterialName;
     private string _emojiGameObjectName = "Emoji";
     private string _explosionGameObjectName = "Explosion";
+    private bool _isExploding;
+    private bool _rotating = false;
 
     public Utilities.PowerupEnum powerup = Utilities.PowerupEnum.none;
     public bool isShown;
@@ -25,17 +26,35 @@ public class Tile : MonoBehaviour
     private void Update()
     {
         // 0 = facing front. 180 = facing back.
-        if (isShown && transform.localRotation.eulerAngles.y > 0)
+        if (_rotating)
         {
-            transform.localRotation =
-                Quaternion.RotateTowards(transform.localRotation, Quaternion.Euler(transform.localRotation.eulerAngles.x, 0, transform.localRotation.eulerAngles.z), 600f * Time.deltaTime);
+            if (isShown)
+            {
+                if (transform.localRotation.eulerAngles.y > 0)
+                {
+                    transform.localRotation =
+                    Quaternion.RotateTowards(transform.localRotation, Quaternion.Euler(transform.localRotation.eulerAngles.x, 0, transform.localRotation.eulerAngles.z), 600f * Time.deltaTime);
+                }
+                else
+                {
+                    _rotating = false;
+                }
+            }
+
+            if (!isShown)
+            {
+                if (transform.localRotation.eulerAngles.y < 180)
+                {
+                    transform.localRotation =
+                    Quaternion.RotateTowards(transform.localRotation, _originalTileRotation, 600f * Time.deltaTime);
+                }
+                else
+                {
+                    _rotating = false;
+                }
+            }
         }
 
-        if (!isShown && transform.localRotation.eulerAngles.y < 180)
-        {
-            transform.localRotation =
-                Quaternion.RotateTowards(transform.localRotation, _originalTileRotation, 600f * Time.deltaTime);
-        }
     }
 
     private void OnMouseDown()
@@ -96,11 +115,13 @@ public class Tile : MonoBehaviour
     public void ShowTile()
     {
         isShown = true;
+        _rotating = true;
     }
 
     public void HideTile()
     {
         isShown = false;
+        _rotating = true;
     }
 
     public void ExplodeTile()
