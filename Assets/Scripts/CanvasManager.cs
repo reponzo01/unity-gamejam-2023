@@ -10,6 +10,11 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private GameObject powerupMultiselectIcon;
     [SerializeField] private TextMeshProUGUI multiselectTilesAvailableText;
     [SerializeField] private TextMeshProUGUI multiselectInstructionsText;
+    [SerializeField] private TextMeshProUGUI powerupFlashText;
+
+    private float _lerpPowerupFlashTextDuration = 0.2f;
+    private Vector3 _lerpPowerupFlashTextStartScale = new Vector3(0.5f, 0.5f, 0.5f);
+    private Vector3 _lerpPwerupFlashTExtEndScale = new Vector3(3f, 3f, 3f);
 
     // Start is called before the first frame update
     void Start()
@@ -21,6 +26,22 @@ public class CanvasManager : MonoBehaviour
     void Update()
     {
 
+    }
+
+    private IEnumerator LerpPowerupFlashText()
+    {
+        float timeElapsed = 0f;
+        powerupFlashText.transform.localScale = _lerpPowerupFlashTextStartScale;
+        while (timeElapsed < _lerpPowerupFlashTextDuration)
+        {
+            powerupFlashText.transform.localScale = Vector3.Slerp(
+                _lerpPowerupFlashTextStartScale,
+                _lerpPwerupFlashTExtEndScale,
+                timeElapsed / _lerpPowerupFlashTextDuration);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+        StartCoroutine(Utilities.CoroutineDeactivateGameObjectAfterSeconds(powerupFlashText.gameObject, .5f));
     }
 
     public void SwitchTo3D()
@@ -66,5 +87,22 @@ public class CanvasManager : MonoBehaviour
     {
         multiselectTilesAvailableText.SetText(tilesAvailable.ToString());
         multiselectInstructionsText.SetText($"Select up to {tilesAvailable} tiles at once!");
+    }
+
+    public void ShowPowerupFlashText(Utilities.PowerupEnum powerup)
+    {
+        switch (powerup)
+        {
+            case Utilities.PowerupEnum.match:
+                powerupFlashText.SetText("Automatch!");
+                break;
+            case Utilities.PowerupEnum.multiselect:
+                powerupFlashText.SetText("Multiselect!");
+                break;
+            default:
+                break;
+        }
+        powerupFlashText.gameObject.SetActive(true);
+        StartCoroutine(LerpPowerupFlashText());
     }
 }

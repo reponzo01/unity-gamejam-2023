@@ -18,9 +18,12 @@ public static class Utilities
         }
     }
 
-    /// <summary>
-    /// Powerup Enum
-    /// </summary>
+    public static IEnumerator CoroutineDeactivateGameObjectAfterSeconds(GameObject gameObject, float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        gameObject.SetActive(false);
+    }
+
     public enum PowerupEnum
     {
         bomb,

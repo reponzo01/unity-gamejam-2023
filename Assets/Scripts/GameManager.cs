@@ -36,6 +36,9 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private int powerupMultiselectDefaultTiles = 4;
 
+    [SerializeField]
+    private GameObject cameraShake;
+
     private List<Tile> _flippedTiles;
     private List<int> _3DPanelNumberList = new List<int> {2, 3, 4, 5, 6};
     private int _tilesOnBoard = 0;
@@ -90,6 +93,12 @@ public class GameManager : MonoBehaviour
                 Right();
             }
         }
+    }
+
+    private void ShakeCamera()
+    {
+        cameraShake.SetActive(true);
+        StartCoroutine(Utilities.CoroutineDeactivateGameObjectAfterSeconds(cameraShake, 1.1f));
     }
 
     private void PopulateActiveTiles()
@@ -223,7 +232,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private IEnumerator ExplodeTiles(List<Tile> tiles)
+    private IEnumerator ExplodeTiles(List<Tile> tiles, bool shakeCamera = true)
     {
         yield return new WaitForSeconds(0.5f);
         var safeList = new List<Tile>();
@@ -234,6 +243,10 @@ public class GameManager : MonoBehaviour
             _flippedTiles.Remove(tile);
         }
         _tilesOnBoard = _tilesOnBoard - tiles.Count;
+        if (shakeCamera)
+        {
+            // ShakeCamera();
+        }
 
         if (_tilesOnBoard <= 0)
         {
@@ -255,6 +268,7 @@ public class GameManager : MonoBehaviour
                 break;
         }
         _canvasManagerComponent.ShowPowerupIcon(powerupEnum, true);
+        _canvasManagerComponent.ShowPowerupFlashText(powerupEnum);
         PowerupInitialize(powerupEnum);
     }
 
@@ -375,7 +389,7 @@ public class GameManager : MonoBehaviour
             if (tile.IsPowerup())
             {
                 ActivatePowerup(tile.powerup);
-                StartCoroutine(ExplodeTiles(new List<Tile>{tile}));
+                StartCoroutine(ExplodeTiles(new List<Tile>{tile}, false));
             }
             else
             {
@@ -391,7 +405,7 @@ public class GameManager : MonoBehaviour
             if (tile.IsPowerup())
             {
                 ActivatePowerup(tile.powerup);
-                StartCoroutine(ExplodeTiles(new List<Tile>{tile}));
+                StartCoroutine(ExplodeTiles(new List<Tile>{tile}, false));
             }
             else
             {
@@ -412,7 +426,7 @@ public class GameManager : MonoBehaviour
                 if (tile.IsPowerup())
                 {
                     ActivatePowerup(tile.powerup);
-                    StartCoroutine(ExplodeTiles(new List<Tile>{tile}));
+                    StartCoroutine(ExplodeTiles(new List<Tile>{tile}, false));
                 }
                 else
                 {
