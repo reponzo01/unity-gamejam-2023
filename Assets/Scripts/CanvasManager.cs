@@ -11,6 +11,8 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI multiselectTilesAvailableText;
     [SerializeField] private TextMeshProUGUI multiselectInstructionsText;
     [SerializeField] private TextMeshProUGUI powerupFlashText;
+    [SerializeField] private TextMeshProUGUI typewriterText;
+    [SerializeField] private int typewriterWordsPerMinute = 75;
 
     private float _lerpPowerupFlashTextDuration = 0.2f;
     private Vector3 _lerpPowerupFlashTextStartScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -26,6 +28,26 @@ public class CanvasManager : MonoBehaviour
     void Update()
     {
 
+    }
+
+    private IEnumerator Typewriter(string text, int wordsPerMinute)
+    {
+        float timeElapsed = 0f;
+        float secondsPerCharacter = 1 / ((wordsPerMinute * 5) / 60f);
+        int charactersProcessed = 0;
+        string textOnScreen = string.Empty;
+        while (charactersProcessed < text.Length)
+        {
+            if (timeElapsed >= secondsPerCharacter)
+            {
+                textOnScreen = text.Substring(0, charactersProcessed + 1);
+                charactersProcessed++;
+                typewriterText.SetText(textOnScreen);
+                timeElapsed = 0;
+            }
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
     }
 
     private IEnumerator LerpPowerupFlashText()
@@ -104,5 +126,12 @@ public class CanvasManager : MonoBehaviour
         }
         powerupFlashText.gameObject.SetActive(true);
         StartCoroutine(LerpPowerupFlashText());
+    }
+
+    // TESTING
+    public void StartTypewriter()
+    {
+        string text = "This is a test of the emergency broadcast system. This is only a test.";
+        StartCoroutine(Typewriter(text, typewriterWordsPerMinute));
     }
 }
