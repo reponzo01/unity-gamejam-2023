@@ -18,39 +18,28 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    [SerializeField]
-    private List<Material> emojis;
-
-    [SerializeField]
-    private List<Material> powerupMaterials;
-
-    [SerializeField]
-    private GameObject mainCube4x4;
-
-    [SerializeField]
-    private Canvas canvas;
-
-    [SerializeField]
-    private int maxFlippedTilesAllowed = 2;
-
-    [SerializeField]
-    private int powerupMultiselectDefaultTiles = 4;
-
-    [SerializeField]
-    private GameObject cameraShake;
+    [SerializeField] private List<Material> emojis;
+    [SerializeField] private List<Material> powerupMaterials;
+    [SerializeField] private GameObject mainCube4x4;
+    [SerializeField] private GameObject cameraShake;
+    [SerializeField] private GameObject cameraParent;
+    [SerializeField] private Canvas canvas;
+    [SerializeField] private int maxFlippedTilesAllowed = 2;
+    [SerializeField] private int powerupMultiselectDefaultTiles = 4;
+    [SerializeField] private int powerupsPerPanel = 4;
 
     private List<Tile> _flippedTiles;
     private List<int> _3DPanelNumberList = new List<int> {2, 3, 4, 5, 6};
-    private int _tilesOnBoard = 0;
-    private bool _is2D = false;
     private MainCube _mainCube4x4Component;
     private CameraMovement _cameraMovementComponent;
     private CanvasManager _canvasManagerComponent;
-    private bool _powerupMatchActive = false;
+    private bool _is2D = false;
     private bool _powerupMultiselectActive = false;
+    private bool _powerupMatchActive = false;
+    private int _tilesOnBoard = 0;
+    private int _powerupMultiselectTilesAvailable = 0;
 
     public bool isPowerupInstructionsActive = false;
-    public int powerupMultiselectTilesAvailable = 0;
 
     private void Awake()
     {
@@ -64,7 +53,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         _mainCube4x4Component = mainCube4x4.GetComponent<MainCube>();
-        _cameraMovementComponent = Camera.main.GetComponent<CameraMovement>();
+        _cameraMovementComponent = cameraParent.GetComponent<CameraMovement>();
         _canvasManagerComponent = canvas.GetComponent<CanvasManager>();
 
         SwitchTo2D();
@@ -142,8 +131,7 @@ public class GameManager : MonoBehaviour
         // TODO: This would be better extracted into a method since it's setting the powerups
         if (allActiveTiles.Count > 16)
         {
-            var numPowerupsPerPanel = 4; // Keep this an even number!
-            var numberOfPowerups = Mathf.Ceil(allActiveTiles.Count / 16 * numPowerupsPerPanel);
+            var numberOfPowerups = Mathf.Ceil(allActiveTiles.Count / 16 * powerupsPerPanel);
             tileIndecies.Shuffle();
 
             for (var i = 0; i < Mathf.Ceil(numberOfPowerups/2); i++)
@@ -245,7 +233,7 @@ public class GameManager : MonoBehaviour
         _tilesOnBoard = _tilesOnBoard - tiles.Count;
         if (shakeCamera)
         {
-            // ShakeCamera();
+            ShakeCamera();
         }
 
         if (_tilesOnBoard <= 0)
@@ -268,7 +256,7 @@ public class GameManager : MonoBehaviour
                 break;
         }
         _canvasManagerComponent.ShowPowerupIcon(powerupEnum, true);
-        _canvasManagerComponent.ShowPowerupFlashText(powerupEnum);
+        // _canvasManagerComponent.ShowPowerupFlashText(powerupEnum);
         PowerupInitialize(powerupEnum);
     }
 
@@ -277,7 +265,7 @@ public class GameManager : MonoBehaviour
         switch (powerupEnum)
         {
             case Utilities.PowerupEnum.match:
-                if (!_powerupMultiselectActive || powerupMultiselectTilesAvailable == 0)
+                if (!_powerupMultiselectActive || _powerupMultiselectTilesAvailable == 0)
                 {
                     _powerupMatchActive = false;
                     _canvasManagerComponent.ShowPowerupIcon(powerupEnum, false);
@@ -285,7 +273,7 @@ public class GameManager : MonoBehaviour
                 break;
             case Utilities.PowerupEnum.multiselect:
                 _powerupMultiselectActive = false;
-                powerupMultiselectTilesAvailable = 0;
+                _powerupMultiselectTilesAvailable = 0;
                 _canvasManagerComponent.ShowPowerupIcon(powerupEnum, false);
                 break;
             default:
@@ -305,8 +293,8 @@ public class GameManager : MonoBehaviour
                 }
                 break;
             case Utilities.PowerupEnum.multiselect:
-                powerupMultiselectTilesAvailable += powerupMultiselectDefaultTiles;
-                _canvasManagerComponent.UpdateMultiselectTilesAvailable(powerupMultiselectTilesAvailable);
+                _powerupMultiselectTilesAvailable += powerupMultiselectDefaultTiles;
+                _canvasManagerComponent.UpdateMultiselectTilesAvailable(_powerupMultiselectTilesAvailable);
                 break;
             default:
                 break;
@@ -373,8 +361,8 @@ public class GameManager : MonoBehaviour
     {
         if (_powerupMultiselectActive)
         {
-            powerupMultiselectTilesAvailable--;
-            _canvasManagerComponent.UpdateMultiselectTilesAvailable(powerupMultiselectTilesAvailable);
+            _powerupMultiselectTilesAvailable--;
+            _canvasManagerComponent.UpdateMultiselectTilesAvailable(_powerupMultiselectTilesAvailable);
         }
     }
 
@@ -447,7 +435,7 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        if (powerupMultiselectTilesAvailable == 0 && _powerupMultiselectActive)
+        if (_powerupMultiselectTilesAvailable == 0 && _powerupMultiselectActive)
         {
             if (!_powerupMatchActive)
             {
@@ -565,4 +553,19 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // TESTING
+    public void BlowAllTiles()
+    {
+        var tileGameObjects = GetAllActiveTiles();
+        var tiles = new List<Tile>();
+        foreach (var tileGameObject in tileGameObjects)
+        {
+            var tile = tileGameObject.GetComponent<Tile>();
+            if (tile != null)
+            {
+                tiles.Add(tile);
+            }
+        }
+        StartCoroutine(ExplodeTiles(tiles));
+    }
 }

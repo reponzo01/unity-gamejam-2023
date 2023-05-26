@@ -4,8 +4,7 @@ using UnityEngine;
 
 public class MainCube : MonoBehaviour
 {
-    [SerializeField]
-    private GameObject panel1Light;
+    [SerializeField] private GameObject panel1Light;
 
     private float _rotateYAngle = 0f;
     private float _rotateSpeed = 600f;
