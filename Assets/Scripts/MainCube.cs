@@ -34,7 +34,7 @@ public class MainCube : MonoBehaviour
         }
     }
 
-    public void SwitchTo3D()
+    public void Play3D()
     {
         _rotateYAngle = 45f;
         EnablePanel(2);
@@ -42,7 +42,7 @@ public class MainCube : MonoBehaviour
         _rotating = true;
     }
 
-    public void SwitchTo2D()
+    public void Play2D()
     {
         _rotateYAngle = 0f;
         //panel1Light.SetActive(false);

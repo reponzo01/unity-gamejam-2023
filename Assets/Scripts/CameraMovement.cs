@@ -50,7 +50,7 @@ public class CameraMovement : MonoBehaviour
         }
     }
 
-    public void SwitchTo3D()
+    public void Play3D()
     {
         Camera.main.orthographicSize = 4.5f;
         _cameraRequestedPosition = _cameraLookDownPosition;
@@ -59,7 +59,7 @@ public class CameraMovement : MonoBehaviour
         _rotating = true;
     }
 
-    public void SwitchTo2D()
+    public void Play2D()
     {
         Camera.main.orthographicSize = 3f;
         _cameraRequestedPosition = _camera2DPosition;

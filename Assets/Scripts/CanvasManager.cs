@@ -5,51 +5,45 @@ using TMPro;
 
 public class CanvasManager : MonoBehaviour
 {
+    private static CanvasManager _instance;
+
+    public static CanvasManager Instance
+    {
+        get
+        {
+            if (_instance is null)
+                Debug.LogError("Canvas Manager is NULL");
+
+            return _instance;
+        }
+    }
+
     [SerializeField] private GameObject threeDControls;
     [SerializeField] private GameObject powerupMatchIcon;
     [SerializeField] private GameObject powerupMultiselectIcon;
     [SerializeField] private TextMeshProUGUI multiselectTilesAvailableText;
     [SerializeField] private TextMeshProUGUI multiselectInstructionsText;
     [SerializeField] private TextMeshProUGUI powerupFlashText;
-    [SerializeField] private int typewriterWordsPerMinute = 75;
 
     private float _lerpPowerupFlashTextDuration = 0.2f;
     private Vector3 _lerpPowerupFlashTextStartScale = new Vector3(0.5f, 0.5f, 0.5f);
     private Vector3 _lerpPwerupFlashTExtEndScale = new Vector3(3f, 3f, 3f);
 
+    private void Awake()
+    {
+        _instance = this;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        SwitchTo2D();
+        Play2D();
     }
 
     // Update is called once per frame
     void Update()
     {
 
-    }
-
-    private IEnumerator Typewriter(TextMeshProUGUI textObject, string text, int wordsPerMinute)
-    {
-        float timeElapsed = 0f;
-        float secondsPerCharacter = 1 / ((wordsPerMinute * 5) / 60f);
-        int charactersProcessed = 0;
-        string textOnScreen = string.Empty;
-        Color colorTop = new Color(194f/255f, 232f/255f, 212f/255f);
-        Color colorBottom = new Color(95f/255f, 152f/255f, 201f/255f);
-        textObject.colorGradient = new VertexGradient(colorTop, colorTop, colorBottom, colorBottom);
-        while (charactersProcessed < text.Length)
-        {
-            if (timeElapsed >= secondsPerCharacter)
-            {
-                textOnScreen = text.Substring(0, charactersProcessed + 1);
-                charactersProcessed++;
-                textObject.SetText(textOnScreen);
-                timeElapsed = 0;
-            }
-            timeElapsed += Time.deltaTime;
-            yield return null;
-        }
     }
 
     private IEnumerator LerpPowerupFlashText()
@@ -68,12 +62,12 @@ public class CanvasManager : MonoBehaviour
         StartCoroutine(Utilities.CoroutineDeactivateGameObjectAfterSeconds(powerupFlashText.gameObject, .5f));
     }
 
-    public void SwitchTo3D()
+    public void Play3D()
     {
         threeDControls.SetActive(true);
     }
 
-    public void SwitchTo2D()
+    public void Play2D()
     {
         threeDControls.SetActive(false);
     }
@@ -107,7 +101,7 @@ public class CanvasManager : MonoBehaviour
         GameManager.Instance.isPowerupInstructionsActive = false;
     }
 
-    public void UpdateMultiselectTilesAvailable(int tilesAvailable)
+    public void UpdateMultiselectTilesAvailableText(int tilesAvailable)
     {
         multiselectTilesAvailableText.SetText(tilesAvailable.ToString());
         multiselectInstructionsText.SetText($"Select up to {tilesAvailable} tiles at once!");

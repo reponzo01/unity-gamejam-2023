@@ -32,7 +32,6 @@ public class GameManager : MonoBehaviour
     private List<int> _3DPanelNumberList = new List<int> {2, 3, 4, 5, 6};
     private MainCube _mainCube4x4Component;
     private CameraMovement _cameraMovementComponent;
-    private CanvasManager _canvasManagerComponent;
     private bool _is2D = false;
     private bool _powerupMultiselectActive = false;
     private bool _powerupMatchActive = false;
@@ -40,6 +39,7 @@ public class GameManager : MonoBehaviour
     private int _powerupMultiselectTilesAvailable = 0;
 
     public bool isPowerupInstructionsActive = false;
+    public bool isStoryMode = false;
 
     private void Awake()
     {
@@ -54,33 +54,27 @@ public class GameManager : MonoBehaviour
     {
         _mainCube4x4Component = mainCube4x4.GetComponent<MainCube>();
         _cameraMovementComponent = cameraParent.GetComponent<CameraMovement>();
-        _canvasManagerComponent = canvas.GetComponent<CanvasManager>();
-
-        // SwitchTo2D();
-        // PopulateActiveTiles();
     }
 
     // Update is called once per frame
     private void Update()
     {
-        if (!_is2D)
+        if (_is2D || isStoryMode) return;
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
         {
-            if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
-            {
-                Up();
-            }
-            else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
-            {
-                Down();
-            }
-            else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                Left();
-            }
-            else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                Right();
-            }
+            Up();
+        }
+        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            Down();
+        }
+        else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            Left();
+        }
+        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            Right();
         }
     }
 
@@ -255,8 +249,8 @@ public class GameManager : MonoBehaviour
             default:
                 break;
         }
-        _canvasManagerComponent.ShowPowerupIcon(powerupEnum, true);
-        // _canvasManagerComponent.ShowPowerupFlashText(powerupEnum);
+        CanvasManager.Instance.ShowPowerupIcon(powerupEnum, true);
+        // CanvasManager.Instance.ShowPowerupFlashText(powerupEnum);
         PowerupInitialize(powerupEnum);
     }
 
@@ -268,13 +262,13 @@ public class GameManager : MonoBehaviour
                 if (!_powerupMultiselectActive || _powerupMultiselectTilesAvailable == 0)
                 {
                     _powerupMatchActive = false;
-                    _canvasManagerComponent.ShowPowerupIcon(powerupEnum, false);
+                    CanvasManager.Instance.ShowPowerupIcon(powerupEnum, false);
                 }
                 break;
             case Utilities.PowerupEnum.multiselect:
                 _powerupMultiselectActive = false;
                 _powerupMultiselectTilesAvailable = 0;
-                _canvasManagerComponent.ShowPowerupIcon(powerupEnum, false);
+                CanvasManager.Instance.ShowPowerupIcon(powerupEnum, false);
                 break;
             default:
                 break;
@@ -294,7 +288,7 @@ public class GameManager : MonoBehaviour
                 break;
             case Utilities.PowerupEnum.multiselect:
                 _powerupMultiselectTilesAvailable += powerupMultiselectDefaultTiles;
-                _canvasManagerComponent.UpdateMultiselectTilesAvailable(_powerupMultiselectTilesAvailable);
+                CanvasManager.Instance.UpdateMultiselectTilesAvailableText(_powerupMultiselectTilesAvailable);
                 break;
             default:
                 break;
@@ -362,13 +356,13 @@ public class GameManager : MonoBehaviour
         if (_powerupMultiselectActive)
         {
             _powerupMultiselectTilesAvailable--;
-            _canvasManagerComponent.UpdateMultiselectTilesAvailable(_powerupMultiselectTilesAvailable);
+            CanvasManager.Instance.UpdateMultiselectTilesAvailableText(_powerupMultiselectTilesAvailable);
         }
     }
 
     public void TileClicked(Tile tile)
     {
-        if (isPowerupInstructionsActive) return;
+        if (isPowerupInstructionsActive || isStoryMode) return;
 
         DecrementMultiselectTilesAvailable();
         if (_powerupMatchActive)
@@ -420,7 +414,6 @@ public class GameManager : MonoBehaviour
                 {
                     _flippedTiles.Add(tile);
 
-                    // TODO: Technically, the following code does not support more than 2 max tiles flipped allowed
                     if (_flippedTiles.Count == maxFlippedTilesAllowed)
                     {
                         if (TilesMatch(_flippedTiles[0], _flippedTiles[1]))
@@ -445,45 +438,42 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void SwitchTo3D()
+    public void Play3D()
     {
         _is2D = false;
         if (_mainCube4x4Component != null)
         {
-            _mainCube4x4Component.SwitchTo3D();
+            _mainCube4x4Component.Play3D();
         }
 
         if (_cameraMovementComponent != null)
         {
-            _cameraMovementComponent.SwitchTo3D();
+            _cameraMovementComponent.Play3D();
         }
 
-        if (_canvasManagerComponent != null)
-        {
-            _canvasManagerComponent.SwitchTo3D();
-        }
+        CanvasManager.Instance.Play3D();
+
         PopulateActiveTiles();
     }
 
-    public void SwitchTo2D()
+    public void Play2D()
     {
         _is2D = true;
         if (_mainCube4x4Component != null)
         {
-            _mainCube4x4Component.SwitchTo2D();
+            _mainCube4x4Component.gameObject.SetActive(true);
+            _mainCube4x4Component.Play2D();
         }
 
         if (_cameraMovementComponent != null)
         {
-            _cameraMovementComponent.SwitchTo2D();
+            _cameraMovementComponent.Play2D();
         }
 
-        if (_canvasManagerComponent != null)
-        {
-            _canvasManagerComponent.SwitchTo2D();
-        }
+        CanvasManager.Instance.Play2D();
 
         EnableRandomNumberOfPanels(1);
+        PopulateActiveTiles();
     }
 
     public void Up()

@@ -6,6 +6,9 @@ using TMPro;
 public class MainMenu : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI titleText;
+    [SerializeField] private GameObject startButton;
+    [SerializeField] private GameObject playButton;
+    [SerializeField] private GameObject storyButton;
 
     private bool _mainTitleActive;
 
@@ -13,6 +16,12 @@ public class MainMenu : MonoBehaviour
     void Start()
     {
         _mainTitleActive = true;
+        if (PlayerPrefs.GetInt("IsFirstTimePlay", 1) == 0)
+        {
+            startButton.SetActive(false);
+            playButton.SetActive(true);
+            storyButton.SetActive(true);
+        }
         StartCoroutine(RainbowText(titleText));
     }
 
@@ -79,12 +88,27 @@ public class MainMenu : MonoBehaviour
             timeElapsed += Time.deltaTime;
             yield return null;
         }
-        Debug.Log("Coroutine stopped");
     }
 
-    public void StartGame()
+    private void ShowMainMenu(bool show)
+    {
+        gameObject.SetActive(show);
+    }
+
+    public void StartButtonClicked()
     {
         _mainTitleActive = false;
-        //StopCoroutine(RainbowText(titleText));
+        StoryManager.Instance.StartStory();
+        ShowMainMenu(false);
+    }
+
+    public void PlayButtonClicked()
+    {
+
+    }
+
+    public void StoryButtonClicked()
+    {
+
     }
 }
