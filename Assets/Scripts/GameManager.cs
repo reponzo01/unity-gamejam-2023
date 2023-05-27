@@ -56,8 +56,8 @@ public class GameManager : MonoBehaviour
         _cameraMovementComponent = cameraParent.GetComponent<CameraMovement>();
         _canvasManagerComponent = canvas.GetComponent<CanvasManager>();
 
-        SwitchTo2D();
-        PopulateActiveTiles();
+        // SwitchTo2D();
+        // PopulateActiveTiles();
     }
 
     // Update is called once per frame

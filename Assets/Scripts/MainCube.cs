@@ -38,14 +38,14 @@ public class MainCube : MonoBehaviour
     {
         _rotateYAngle = 45f;
         EnablePanel(2);
-        panel1Light.SetActive(true);
+        //panel1Light.SetActive(true);
         _rotating = true;
     }
 
     public void SwitchTo2D()
     {
         _rotateYAngle = 0f;
-        panel1Light.SetActive(false);
+        //panel1Light.SetActive(false);
         _rotating = true;
     }
 

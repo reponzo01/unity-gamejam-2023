@@ -11,7 +11,6 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI multiselectTilesAvailableText;
     [SerializeField] private TextMeshProUGUI multiselectInstructionsText;
     [SerializeField] private TextMeshProUGUI powerupFlashText;
-    [SerializeField] private TextMeshProUGUI typewriterText;
     [SerializeField] private int typewriterWordsPerMinute = 75;
 
     private float _lerpPowerupFlashTextDuration = 0.2f;
@@ -30,19 +29,22 @@ public class CanvasManager : MonoBehaviour
 
     }
 
-    private IEnumerator Typewriter(string text, int wordsPerMinute)
+    private IEnumerator Typewriter(TextMeshProUGUI textObject, string text, int wordsPerMinute)
     {
         float timeElapsed = 0f;
         float secondsPerCharacter = 1 / ((wordsPerMinute * 5) / 60f);
         int charactersProcessed = 0;
         string textOnScreen = string.Empty;
+        Color colorTop = new Color(194f/255f, 232f/255f, 212f/255f);
+        Color colorBottom = new Color(95f/255f, 152f/255f, 201f/255f);
+        textObject.colorGradient = new VertexGradient(colorTop, colorTop, colorBottom, colorBottom);
         while (charactersProcessed < text.Length)
         {
             if (timeElapsed >= secondsPerCharacter)
             {
                 textOnScreen = text.Substring(0, charactersProcessed + 1);
                 charactersProcessed++;
-                typewriterText.SetText(textOnScreen);
+                textObject.SetText(textOnScreen);
                 timeElapsed = 0;
             }
             timeElapsed += Time.deltaTime;
@@ -128,10 +130,10 @@ public class CanvasManager : MonoBehaviour
         StartCoroutine(LerpPowerupFlashText());
     }
 
-    // TESTING
-    public void StartTypewriter()
-    {
-        string text = "This is a test of the emergency broadcast system. This is only a test.";
-        StartCoroutine(Typewriter(text, typewriterWordsPerMinute));
-    }
+    // // TESTING
+    // public void StartTypewriter()
+    // {
+    //     string text = "This is a test of the emergency broadcast system. This is only a test.";
+    //     StartCoroutine(Typewriter(text, typewriterWordsPerMinute));
+    // }
 }
