@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class StoryManager : MonoBehaviour
@@ -9,7 +10,8 @@ public class StoryManager : MonoBehaviour
 
     [SerializeField] private GameObject nextButton;
     [SerializeField] private GameObject skipButton;
-    [SerializeField] private GameObject panel9Effect;
+    [SerializeField] private GameObject panel9EffectGameObject;
+    [SerializeField] private GameObject panel9FlashForegroundGameObject;
     [SerializeField] private GameObject character;
     [SerializeField] private int typewriterWordsPerMinute = 400;
 
@@ -17,10 +19,11 @@ public class StoryManager : MonoBehaviour
     private Coroutine _activeTypewriterCoroutine;
     private Coroutine _panel9EffectCoroutine; // TODO: Delete if I don't need to stop this.
     private int _activeStoryPanelNumber = 0;
-    private float _panel9EffectEffectDuration = 4f;
+    private int _finalStoryPanelNumber = 10;
+    private float _panel9EffectDuration = 4f;
+    private float _panel9FlashForegroundEffectDuration = 2f;
     private Vector3 _panel9EffectStartSize = new Vector3(0.5f, 0.5f, 0.5f);
     private Vector3 _panel9EffectEndSize = new Vector3(4.5f, 4.5f, 4.5f);
-
 
     public static StoryManager Instance
     {
@@ -52,17 +55,35 @@ public class StoryManager : MonoBehaviour
 
     private IEnumerator StartPanel9Effect()
     {
-        panel9Effect.SetActive(true);
+        panel9EffectGameObject.SetActive(true);
         float timeElapsed = 0;
-        while (timeElapsed < _panel9EffectEffectDuration)
+        while (timeElapsed < _panel9EffectDuration)
         {
-            panel9Effect.transform.localScale = Vector3.Slerp(
+            panel9EffectGameObject.transform.localScale = Vector3.Slerp(
                 _panel9EffectStartSize,
                 _panel9EffectEndSize,
-                timeElapsed / _panel9EffectEffectDuration);
+                timeElapsed / _panel9EffectDuration);
             timeElapsed += Time.deltaTime;
             yield return null;
         }
+    }
+
+    private IEnumerator StartPanel9FlashForegroundEffect()
+    {
+        var flashForegroundImage = panel9FlashForegroundGameObject.GetComponent<Image>();
+        if (flashForegroundImage != null)
+        {
+            float timeElapsed = 0;
+            while (timeElapsed < _panel9FlashForegroundEffectDuration)
+            {
+                var newColor = new Color(1f, 1f, 1f, Mathf.Lerp(0f, 1f, timeElapsed / _panel9FlashForegroundEffectDuration));
+                flashForegroundImage.color = newColor;
+                timeElapsed += Time.deltaTime;
+                yield return null;
+            }
+        }
+        _activeStoryPanelGameObject.SetActive(false);
+        PlayFinalPanel();
     }
 
     private IEnumerator Typewriter(TextMeshProUGUI textObject, int wordsPerMinute)
@@ -110,7 +131,7 @@ public class StoryManager : MonoBehaviour
     {
         nextButton.SetActive(false);
         skipButton.SetActive(false);
-        _activeStoryPanelNumber++;
+        _activeStoryPanelNumber = _finalStoryPanelNumber;
         GoToStoryPanel(_activeStoryPanelNumber);
     }
 
@@ -135,7 +156,10 @@ public class StoryManager : MonoBehaviour
         }
         else if (_activeStoryPanelNumber == 9)
         {
-            PlayFinalPanel();
+            _activeStoryPanelGameObject.SetActive(true);
+            nextButton.SetActive(false);
+            skipButton.SetActive(false);
+            StartCoroutine(StartPanel9FlashForegroundEffect());
         }
         else
         {
