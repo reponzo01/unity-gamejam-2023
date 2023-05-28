@@ -42,6 +42,8 @@ public class GameManager : MonoBehaviour
     public bool isOverlayInstructionsActive = false;
     public bool isStoryMode = false;
     public bool isZenMode = false;
+    public int bestAttemptsScore = 0;
+    public int currentAttemptsScore = 0;
 
     private void Awake()
     {
@@ -56,6 +58,9 @@ public class GameManager : MonoBehaviour
     {
         _mainCube4x4Component = mainCube4x4.GetComponent<MainCube>();
         _cameraMovementComponent = cameraParent.GetComponent<CameraMovement>();
+        bestAttemptsScore = PlayerPrefs.GetInt("BestAttemptsScore", 0);
+        CanvasManager.Instance.SetBestAttemptsScore(bestAttemptsScore);
+        CanvasManager.Instance.SetCurrentAttemptsScore(0);
     }
 
     // Update is called once per frame
@@ -301,10 +306,15 @@ public class GameManager : MonoBehaviour
     {
         _mainCube4x4Component.gameObject.SetActive(false);
         _cameraMovementComponent.Play2D();
-        CanvasManager.Instance.Hide3DControls();
-        CanvasManager.Instance.HidePersistentLevelInstructionsText();
+        CanvasManager.Instance.Show3DControls(false);
+        CanvasManager.Instance.ShowPersistentLevelInstructionsText(false);
         StoryManager.Instance.GoToStoryPanel(9);
         PlayerPrefs.SetInt("IsGameFinished", 1);
+        if (bestAttemptsScore == 0 || currentAttemptsScore < bestAttemptsScore)
+        {
+            PlayerPrefs.SetInt("BestAttemptsScore", currentAttemptsScore);
+            CanvasManager.Instance.SetBestAttemptsScore(currentAttemptsScore);
+        }
     }
 
     private void ActivatePowerup(Utilities.PowerupEnum powerupEnum)
@@ -486,6 +496,11 @@ public class GameManager : MonoBehaviour
 
                     if (_flippedTiles.Count == maxFlippedTilesAllowed)
                     {
+                        if (!isZenMode)
+                        {
+                            currentAttemptsScore++;
+                            CanvasManager.Instance.SetCurrentAttemptsScore(currentAttemptsScore);
+                        }
                         if (TilesMatch(_flippedTiles[0], _flippedTiles[1]))
                         {
                             StartCoroutine(ExplodeTiles(new List<Tile>{_flippedTiles[0], _flippedTiles[1]}));

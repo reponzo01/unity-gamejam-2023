@@ -26,6 +26,7 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private GameObject switchTo2DButton;
     [SerializeField] private GameObject switchTo3DButton;
     [SerializeField] private GameObject mainMenuButton;
+    [SerializeField] private GameObject scoresGameObject;
     [SerializeField] private Sprite twoDLevel1Sprite;
     [SerializeField] private Sprite twoDLevel2Sprite;
     [SerializeField] private Sprite twoDLevel3Sprite;
@@ -36,6 +37,8 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI multiselectInstructionsText;
     [SerializeField] private TextMeshProUGUI instructionsFlashText;
     [SerializeField] private TextMeshProUGUI persistentLevelText;
+    [SerializeField] private TextMeshProUGUI bestAttemptsText;
+    [SerializeField] private TextMeshProUGUI currentAttemptsText;
 
     private Vector3 _lerpInstructionsFlashTextStartScale = new Vector3(0.5f, 0.5f, 0.5f);
     private Vector3 _lerpInstructionsFlashTextEndScale = new Vector3(2f, 2f, 2f);
@@ -62,7 +65,7 @@ public class CanvasManager : MonoBehaviour
 
     private IEnumerator LerpInstructionsFlashText(string text)
     {
-        persistentLevelText.gameObject.SetActive(false);
+        ShowPersistentLevelInstructionsText(false);
         float timeElapsed = 0f;
         instructionsFlashText.SetText(text);
         instructionsFlashText.gameObject.SetActive(true);
@@ -84,10 +87,11 @@ public class CanvasManager : MonoBehaviour
     public void Play3D(int level)
     {
         _is2D = false;
-        threeDControls.SetActive(true);
+        Show3DControls(true);
         twoDLevelProgressGameObject.SetActive(false);
         if (!GameManager.Instance.isZenMode)
         {
+            ShowScores(true);
             UpdatePersistentLevelText(level);
         }
     }
@@ -95,9 +99,10 @@ public class CanvasManager : MonoBehaviour
     public void Play2D(int level)
     {
         _is2D = true;
-        threeDControls.SetActive(false);
+        Show3DControls(false);
         if (!GameManager.Instance.isZenMode)
         {
+            ShowScores(true);
             ShowInstructionsFlashText($"Match the tiles!{System.Environment.NewLine}2D LEVEL {level}");
             UpdatePersistentLevelText(level);
             Update2DLevelProgress(level);
@@ -180,14 +185,29 @@ public class CanvasManager : MonoBehaviour
         StartCoroutine(LerpInstructionsFlashText(text));
     }
 
-    public void Hide3DControls()
+    public void Show3DControls(bool show)
     {
-        threeDControls.SetActive(false);
+        threeDControls.SetActive(show);
     }
 
-    public void HidePersistentLevelInstructionsText()
+    public void ShowPersistentLevelInstructionsText(bool show)
     {
-        persistentLevelText.gameObject.SetActive(false);
+        persistentLevelText.gameObject.SetActive(show);
+    }
+
+    public void ShowScores(bool show)
+    {
+        scoresGameObject.SetActive(show);
+    }
+
+    public void SetBestAttemptsScore(int score)
+    {
+        bestAttemptsText.SetText(score.ToString());
+    }
+
+    public void SetCurrentAttemptsScore(int score)
+    {
+        currentAttemptsText.SetText(score.ToString());
     }
 
     public void ActivateZenMode()

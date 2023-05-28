@@ -179,6 +179,7 @@ public class StoryManager : MonoBehaviour
     public void GoToStoryPanel(int storyPanelNumber)
     {
         GameManager.Instance.isStoryMode = true;
+        CanvasManager.Instance.ShowScores(false);
         var storyPanel = transform.Find($"Panel{storyPanelNumber}");
         if (storyPanel != null)
         {
@@ -191,6 +192,7 @@ public class StoryManager : MonoBehaviour
             }
             if (_activeStoryPanelNumber == 10)
             {
+                CanvasManager.Instance.ShowScores(true);
                 character.SetActive(true);
             }
             else
