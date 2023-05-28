@@ -51,12 +51,14 @@ public class MainCube : MonoBehaviour
 
     public void TurnLeft()
     {
+        AudioManager.Instance.PlaySFXWoosh();
         _rotateYAngle += 90f;
         _rotating = true;
     }
 
     public void TurnRight()
     {
+        AudioManager.Instance.PlaySFXWoosh();
         _rotateYAngle -= 90f;
         _rotating = true;
     }

@@ -70,6 +70,10 @@ public class CameraMovement : MonoBehaviour
 
     public void LookUp()
     {
+        if (!Mathf.Approximately(Camera.main.transform.position.y, _cameraLookUpPosition.y))
+        {
+            AudioManager.Instance.PlaySFXWoosh();
+        }
         _cameraRequestedPosition = _cameraLookUpPosition;
         _cameraRequestedRotationAngle = _cameraLookUpRotationAngle;
         _moving = true;
@@ -78,6 +82,10 @@ public class CameraMovement : MonoBehaviour
 
     public void LookDown()
     {
+        if (!Mathf.Approximately(Camera.main.transform.position.y, _cameraLookDownPosition.y))
+        {
+            AudioManager.Instance.PlaySFXWoosh();
+        }
         _cameraRequestedPosition = _cameraLookDownPosition;
         _cameraRequestedRotationAngle = _cameraLookDownRotationAngle;
         _moving = true;

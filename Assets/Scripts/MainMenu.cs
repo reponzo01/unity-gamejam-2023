@@ -28,6 +28,7 @@ public class MainMenu : MonoBehaviour
             zenButton.SetActive(true);
         }
         StartCoroutine(RainbowText(titleText));
+        AudioManager.Instance.PlayMusicMainMenu();
     }
 
     // Update is called once per frame
@@ -102,8 +103,8 @@ public class MainMenu : MonoBehaviour
 
     public void ZenButtonClicked()
     {
-        // TODO: Implement
         _mainTitleActive = false;
+        AudioManager.Instance.StopAllAudio();
         GameManager.Instance.isZenMode = true;
         GameManager.Instance.Play2D();
         CanvasManager.Instance.ActivateZenMode();
@@ -113,15 +114,14 @@ public class MainMenu : MonoBehaviour
     public void PlayButtonClicked()
     {
         _mainTitleActive = false;
+        AudioManager.Instance.StopAllAudio();
         GameManager.Instance.Play2D();
         ShowMainMenu(false);
     }
 
     public void StartButtonClicked()
     {
-        _mainTitleActive = false;
-        StoryManager.Instance.StartStory();
-        ShowMainMenu(false);
+        StoryButtonClicked();
     }
 
     public void StoryButtonClicked()

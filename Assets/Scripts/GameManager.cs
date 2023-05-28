@@ -123,6 +123,7 @@ public class GameManager : MonoBehaviour
                 if (tile != null)
                 {
                     tile.HideTile();
+                    tile.ResetTilePowerup();
                     tile.SetTileEmoji(emojis[emojiIndex]);
                     tile.tileIndex = index;
                 }
@@ -246,6 +247,10 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         var safeList = new List<Tile>();
         safeList.AddRange(tiles);
+        if (safeList.Count > 0)
+        {
+            AudioManager.Instance.PlayRandomExplosionSFX();
+        }
         foreach (var tile in safeList)
         {
             tile.ExplodeTile();
@@ -254,7 +259,7 @@ public class GameManager : MonoBehaviour
         _tilesOnBoard = _tilesOnBoard - tiles.Count;
         if (shakeCamera)
         {
-            // ShakeCamera();
+            ShakeCamera();
         }
 
         if (_tilesOnBoard <= 0)
@@ -291,6 +296,7 @@ public class GameManager : MonoBehaviour
         }
         else // 3D
         {
+            ResetAllPowerups();
             if (_activeLevel == 6)
             {
                 FinishGame();
@@ -319,6 +325,7 @@ public class GameManager : MonoBehaviour
 
     private void ActivatePowerup(Utilities.PowerupEnum powerupEnum)
     {
+        AudioManager.Instance.PlaySFXPowerup();
         switch (powerupEnum)
         {
             case Utilities.PowerupEnum.match:
@@ -334,12 +341,12 @@ public class GameManager : MonoBehaviour
         PowerupInitialize(powerupEnum);
     }
 
-    private void DeactivatePowerup(Utilities.PowerupEnum powerupEnum)
+    private void DeactivatePowerup(Utilities.PowerupEnum powerupEnum, bool force = false)
     {
         switch (powerupEnum)
         {
             case Utilities.PowerupEnum.match:
-                if (!_powerupMultiselectActive || _powerupMultiselectTilesAvailable == 0)
+                if (!_powerupMultiselectActive || _powerupMultiselectTilesAvailable == 0 || force)
                 {
                     _powerupMatchActive = false;
                     CanvasManager.Instance.ShowPowerupIcon(powerupEnum, false);
@@ -372,6 +379,14 @@ public class GameManager : MonoBehaviour
                 break;
             default:
                 break;
+        }
+    }
+
+    private void ResetAllPowerups()
+    {
+        foreach (Utilities.PowerupEnum powerup in System.Enum.GetValues(typeof(Utilities.PowerupEnum)))
+        {
+            DeactivatePowerup(powerup, true);
         }
     }
 
@@ -525,6 +540,9 @@ public class GameManager : MonoBehaviour
 
     public void Play3D(int level = 1)
     {
+        if (isZenMode) AudioManager.Instance.PlayZenGameplayMusic();
+        else AudioManager.Instance.PlayRandomGameplayMusic();
+
         isStoryMode = false;
         _is2D = false;
         _activeLevel = level;
@@ -553,6 +571,9 @@ public class GameManager : MonoBehaviour
 
     public void Play2D(int level = 1)
     {
+        if (isZenMode) AudioManager.Instance.PlayZenGameplayMusic();
+        else AudioManager.Instance.PlayRandomGameplayMusic();
+
         isStoryMode = false;
         _is2D = true;
         _activeLevel = level;

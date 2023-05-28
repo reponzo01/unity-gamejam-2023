@@ -147,7 +147,8 @@ public class CanvasManager : MonoBehaviour
     public void UpdatePersistentLevelText(int level)
     {
         var levelText = _is2D ? "2D" : "3D";
-        persistentLevelText.SetText($"{levelText}{System.Environment.NewLine}LEVEL {level}");
+        var totalLevels = _is2D ? 3 : 5;
+        persistentLevelText.SetText($"{levelText}{System.Environment.NewLine}LEVEL {level}/{totalLevels}");
     }
 
     public void Update2DLevelProgress(int level)

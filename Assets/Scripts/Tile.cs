@@ -138,12 +138,17 @@ public class Tile : MonoBehaviour
         var explosion = transform.Find(_explosionGameObjectName).GetComponent<ParticleSystem>();
         if (explosion != null)
         {
-            // explosion.Play();
+            explosion.Play();
         }
 
         if (_emojiMeshRenderer != null) _emojiMeshRenderer.enabled = false;
         if (_tileMeshRenderer != null) _tileMeshRenderer.enabled = false;
         StartCoroutine(DisableTile());
+    }
+
+    public void ResetTilePowerup()
+    {
+        powerup = Utilities.PowerupEnum.none;
     }
 
     public bool IsPowerup()

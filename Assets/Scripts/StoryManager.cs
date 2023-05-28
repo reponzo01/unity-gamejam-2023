@@ -73,6 +73,7 @@ public class StoryManager : MonoBehaviour
         var flashForegroundImage = panel9FlashForegroundGameObject.GetComponent<Image>();
         if (flashForegroundImage != null)
         {
+            AudioManager.Instance.PlaySFXMagicTransform();
             float timeElapsed = 0;
             while (timeElapsed < _panel9FlashForegroundEffectDuration)
             {
@@ -188,9 +189,6 @@ public class StoryManager : MonoBehaviour
         {
             PlayFinalPanel();
         }
-        // _activeStoryPanelGameObject.SetActive(false);
-        // nextButton.SetActive(false);
-        // skipButton.SetActive(false);
     }
 
     public void StartStory()
@@ -198,6 +196,8 @@ public class StoryManager : MonoBehaviour
         PlayerPrefs.SetInt("IsFirstTimePlay", 0);
         _activeStoryPanelNumber = 1;
         GoToStoryPanel(_activeStoryPanelNumber);
+        AudioManager.Instance.StopAllAudio();
+        AudioManager.Instance.PlaySFXBirds();
     }
 
     public void GoToStoryPanel(int storyPanelNumber)
@@ -210,12 +210,29 @@ public class StoryManager : MonoBehaviour
             _activeStoryPanelGameObject = storyPanel.gameObject;
             _activeStoryPanelGameObject.SetActive(true);
             _activeStoryPanelNumber = storyPanelNumber;
+            // TODO: If there was more time and this was a bigger game,
+            // find a way to better contain story panel logic
+            if (_activeStoryPanelNumber == 2)
+            {
+                AudioManager.Instance.PlaySFXExclamation();
+            }
+            if (_activeStoryPanelNumber == 3)
+            {
+                AudioManager.Instance.PlayMusicPanels3To5();
+            }
+            if (_activeStoryPanelNumber == 6)
+            {
+                AudioManager.Instance.PlayMusicPanels6To8();
+            }
             if (_activeStoryPanelNumber == 9)
             {
+                AudioManager.Instance.StopAllAudio();
+                AudioManager.Instance.PlaySFXRumble();
                 _panel9EffectCoroutine = StartCoroutine(StartPanel9Effect());
             }
             if (_activeStoryPanelNumber == 10)
             {
+                AudioManager.Instance.PlayMusicPanelFinal();
                 CanvasManager.Instance.ShowScores(true);
                 character.SetActive(true);
             }
