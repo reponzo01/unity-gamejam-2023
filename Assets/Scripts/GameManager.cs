@@ -542,6 +542,7 @@ public class GameManager : MonoBehaviour
     {
         if (isZenMode) AudioManager.Instance.PlayZenGameplayMusic();
         else AudioManager.Instance.PlayRandomGameplayMusic();
+        CanvasManager.Instance.ShowMainMenuButton(true);
 
         isStoryMode = false;
         _is2D = false;
@@ -573,6 +574,7 @@ public class GameManager : MonoBehaviour
     {
         if (isZenMode) AudioManager.Instance.PlayZenGameplayMusic();
         else AudioManager.Instance.PlayRandomGameplayMusic();
+        CanvasManager.Instance.ShowMainMenuButton(true);
 
         isStoryMode = false;
         _is2D = true;

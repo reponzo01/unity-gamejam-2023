@@ -201,6 +201,11 @@ public class CanvasManager : MonoBehaviour
         scoresGameObject.SetActive(show);
     }
 
+    public void ShowMainMenuButton(bool show)
+    {
+        mainMenuButton.SetActive(show);
+    }
+
     public void SetBestAttemptsScore(int score)
     {
         bestAttemptsText.SetText(score.ToString());
@@ -215,6 +220,5 @@ public class CanvasManager : MonoBehaviour
     {
         switchTo2DButton.SetActive(true);
         switchTo3DButton.SetActive(true);
-        mainMenuButton.SetActive(true);
     }
 }

@@ -204,6 +204,7 @@ public class StoryManager : MonoBehaviour
     {
         GameManager.Instance.isStoryMode = true;
         CanvasManager.Instance.ShowScores(false);
+        CanvasManager.Instance.ShowMainMenuButton(false);
         var storyPanel = transform.Find($"Panel{storyPanelNumber}");
         if (storyPanel != null)
         {
