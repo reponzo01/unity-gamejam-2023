@@ -9,6 +9,7 @@ public class MainMenu : MonoBehaviour
     [SerializeField] private GameObject startButton;
     [SerializeField] private GameObject playButton;
     [SerializeField] private GameObject storyButton;
+    [SerializeField] private GameObject zenButton;
 
     private bool _mainTitleActive;
 
@@ -21,6 +22,10 @@ public class MainMenu : MonoBehaviour
             startButton.SetActive(false);
             playButton.SetActive(true);
             storyButton.SetActive(true);
+        }
+        if (PlayerPrefs.GetInt("IsGameFinished", 0) == 1)
+        {
+            zenButton.SetActive(true);
         }
         StartCoroutine(RainbowText(titleText));
     }
@@ -95,6 +100,23 @@ public class MainMenu : MonoBehaviour
         gameObject.SetActive(show);
     }
 
+    public void ZenButtonClicked()
+    {
+        // TODO: Implement
+        _mainTitleActive = false;
+        GameManager.Instance.isZenMode = true;
+        GameManager.Instance.Play2D();
+        CanvasManager.Instance.ActivateZenMode();
+        ShowMainMenu(false);
+    }
+
+    public void PlayButtonClicked()
+    {
+        _mainTitleActive = false;
+        GameManager.Instance.Play2D();
+        ShowMainMenu(false);
+    }
+
     public void StartButtonClicked()
     {
         _mainTitleActive = false;
@@ -102,13 +124,10 @@ public class MainMenu : MonoBehaviour
         ShowMainMenu(false);
     }
 
-    public void PlayButtonClicked()
-    {
-
-    }
-
     public void StoryButtonClicked()
     {
-
+        _mainTitleActive = false;
+        StoryManager.Instance.StartStory();
+        ShowMainMenu(false);
     }
 }

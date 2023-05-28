@@ -37,9 +37,11 @@ public class GameManager : MonoBehaviour
     private bool _powerupMatchActive = false;
     private int _tilesOnBoard = 0;
     private int _powerupMultiselectTilesAvailable = 0;
+    private int _activeLevel = 0;
 
-    public bool isPowerupInstructionsActive = false;
+    public bool isOverlayInstructionsActive = false;
     public bool isStoryMode = false;
+    public bool isZenMode = false;
 
     private void Awake()
     {
@@ -86,6 +88,7 @@ public class GameManager : MonoBehaviour
 
     private void PopulateActiveTiles()
     {
+        EnableAllTilesInActivePanels();
         _flippedTiles = new List<Tile>();
         _tilesOnBoard = 0;
         List<GameObject> allActiveTiles = GetAllActiveTiles();
@@ -184,22 +187,41 @@ public class GameManager : MonoBehaviour
 
     private List<GameObject> GetActiveTilesByPanel(GameObject panel)
     {
-        var activeTiles = new List<GameObject>();
+        return GetTilesByPanel(panel, true);
+    }
+
+    private List<GameObject> GetTilesByPanel(GameObject panel, bool activeTilesOnly)
+    {
+        var tiles = new List<GameObject>();
         for (var i = 0; i < panel.transform.childCount; i++)
         {
             var child = panel.transform.GetChild(i);
-            if (child.CompareTag("Tile") && child.gameObject.activeSelf)
+            if (child.CompareTag("Tile"))
             {
-                activeTiles.Add(child.gameObject);
+                if (activeTilesOnly && child.gameObject.activeSelf)
+                {
+                    tiles.Add(child.gameObject);
+                }
+                else if (!activeTilesOnly)
+                {
+                    tiles.Add(child.gameObject);
+                }
             }
         }
-        return activeTiles;
+        return tiles;
     }
 
-    private IEnumerator RestartScene()
+    private void EnableAllTilesInActivePanels()
     {
-        yield return new WaitForSeconds(1f);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        var panels = GetActivePanels(_mainCube4x4Component.gameObject);
+        foreach (var panel in panels)
+        {
+            var tiles = GetTilesByPanel(panel, false);
+            foreach (var tile in tiles)
+            {
+                tile.SetActive(true);
+            }
+        }
     }
 
     private IEnumerator ResetTiles(List<Tile> tiles)
@@ -227,13 +249,62 @@ public class GameManager : MonoBehaviour
         _tilesOnBoard = _tilesOnBoard - tiles.Count;
         if (shakeCamera)
         {
-            ShakeCamera();
+            // ShakeCamera();
         }
 
         if (_tilesOnBoard <= 0)
         {
-            StartCoroutine(RestartScene());
+            if (isZenMode) StartCoroutine(RestartZen());
+            else StartCoroutine(IncreaseLevel());
         }
+    }
+
+    private IEnumerator RestartZen()
+    {
+        yield return new WaitForSeconds(1.2f);
+        if (_is2D) Play2D(1);
+        else Play3D(5);
+    }
+
+    private IEnumerator IncreaseLevel()
+    {
+        yield return new WaitForSeconds(1.2f);
+        _activeLevel++;
+        if (_is2D)
+        {
+            if (_activeLevel == 4)
+            {
+                _is2D = false;
+                _activeLevel = 1;
+                _mainCube4x4Component.gameObject.SetActive(false);
+                StoryManager.Instance.GoToStoryPanel(6);
+            }
+            else
+            {
+                Play2D(_activeLevel);
+            }
+        }
+        else // 3D
+        {
+            if (_activeLevel == 6)
+            {
+                FinishGame();
+            }
+            else
+            {
+                Play3D(_activeLevel);
+            }
+        }
+    }
+
+    private void FinishGame()
+    {
+        _mainCube4x4Component.gameObject.SetActive(false);
+        _cameraMovementComponent.Play2D();
+        CanvasManager.Instance.Hide3DControls();
+        CanvasManager.Instance.HidePersistentLevelInstructionsText();
+        StoryManager.Instance.GoToStoryPanel(9);
+        PlayerPrefs.SetInt("IsGameFinished", 1);
     }
 
     private void ActivatePowerup(Utilities.PowerupEnum powerupEnum)
@@ -250,7 +321,6 @@ public class GameManager : MonoBehaviour
                 break;
         }
         CanvasManager.Instance.ShowPowerupIcon(powerupEnum, true);
-        // CanvasManager.Instance.ShowPowerupFlashText(powerupEnum);
         PowerupInitialize(powerupEnum);
     }
 
@@ -362,7 +432,7 @@ public class GameManager : MonoBehaviour
 
     public void TileClicked(Tile tile)
     {
-        if (isPowerupInstructionsActive || isStoryMode) return;
+        if (isOverlayInstructionsActive || isStoryMode) return;
 
         DecrementMultiselectTilesAvailable();
         if (_powerupMatchActive)
@@ -438,11 +508,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void Play3D()
+    public void Play3D(int level = 1)
     {
+        isStoryMode = false;
         _is2D = false;
+        _activeLevel = level;
         if (_mainCube4x4Component != null)
         {
+            _mainCube4x4Component.gameObject.SetActive(true);
             _mainCube4x4Component.Play3D();
         }
 
@@ -451,14 +524,23 @@ public class GameManager : MonoBehaviour
             _cameraMovementComponent.Play3D();
         }
 
-        CanvasManager.Instance.Play3D();
+        CanvasManager.Instance.Play3D(_activeLevel);
 
-        PopulateActiveTiles();
+        if (level > 1)
+        {
+            EnableRandomNumberOfPanels(level + 1);
+        }
+        else
+        {
+            PopulateActiveTiles();
+        }
     }
 
-    public void Play2D()
+    public void Play2D(int level = 1)
     {
+        isStoryMode = false;
         _is2D = true;
+        _activeLevel = level;
         if (_mainCube4x4Component != null)
         {
             _mainCube4x4Component.gameObject.SetActive(true);
@@ -470,10 +552,9 @@ public class GameManager : MonoBehaviour
             _cameraMovementComponent.Play2D();
         }
 
-        CanvasManager.Instance.Play2D();
+        CanvasManager.Instance.Play2D(_activeLevel);
 
         EnableRandomNumberOfPanels(1);
-        PopulateActiveTiles();
     }
 
     public void Up()
@@ -496,6 +577,11 @@ public class GameManager : MonoBehaviour
         _mainCube4x4Component.TurnRight();
     }
 
+    public int GetActiveLevel()
+    {
+        return _activeLevel;
+    }
+
     // Method name is used in UI buttons (1-6) Do not rename.
     public void EnableRandomNumberOfPanels(int numberOfPanelsToEnable)
     {
@@ -513,6 +599,11 @@ public class GameManager : MonoBehaviour
         }
 
         PopulateActiveTiles();
+    }
+
+    public void RestartScene()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     // TESTING

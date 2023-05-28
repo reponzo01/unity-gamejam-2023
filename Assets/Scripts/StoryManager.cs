@@ -9,11 +9,18 @@ public class StoryManager : MonoBehaviour
 
     [SerializeField] private GameObject nextButton;
     [SerializeField] private GameObject skipButton;
+    [SerializeField] private GameObject panel9Effect;
+    [SerializeField] private GameObject character;
     [SerializeField] private int typewriterWordsPerMinute = 400;
 
     private GameObject _activeStoryPanelGameObject;
     private Coroutine _activeTypewriterCoroutine;
+    private Coroutine _panel9EffectCoroutine; // TODO: Delete if I don't need to stop this.
     private int _activeStoryPanelNumber = 0;
+    private float _panel9EffectEffectDuration = 4f;
+    private Vector3 _panel9EffectStartSize = new Vector3(0.5f, 0.5f, 0.5f);
+    private Vector3 _panel9EffectEndSize = new Vector3(4.5f, 4.5f, 4.5f);
+
 
     public static StoryManager Instance
     {
@@ -43,6 +50,21 @@ public class StoryManager : MonoBehaviour
 
     }
 
+    private IEnumerator StartPanel9Effect()
+    {
+        panel9Effect.SetActive(true);
+        float timeElapsed = 0;
+        while (timeElapsed < _panel9EffectEffectDuration)
+        {
+            panel9Effect.transform.localScale = Vector3.Slerp(
+                _panel9EffectStartSize,
+                _panel9EffectEndSize,
+                timeElapsed / _panel9EffectEffectDuration);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
     private IEnumerator Typewriter(TextMeshProUGUI textObject, int wordsPerMinute)
     {
         if (textObject == null) yield return null;
@@ -70,6 +92,28 @@ public class StoryManager : MonoBehaviour
         }
     }
 
+    private void Play2D()
+    {
+        nextButton.SetActive(false);
+        skipButton.SetActive(false);
+        GameManager.Instance.Play2D();
+    }
+
+    private void Play3D()
+    {
+        nextButton.SetActive(false);
+        skipButton.SetActive(false);
+        GameManager.Instance.Play3D();
+    }
+
+    private void PlayFinalPanel()
+    {
+        nextButton.SetActive(false);
+        skipButton.SetActive(false);
+        _activeStoryPanelNumber++;
+        GoToStoryPanel(_activeStoryPanelNumber);
+    }
+
     public void NextButtonClicked()
     {
         // Panels with special cases:
@@ -83,17 +127,15 @@ public class StoryManager : MonoBehaviour
         _activeStoryPanelGameObject.SetActive(false);
         if (_activeStoryPanelNumber == 5)
         {
-            nextButton.SetActive(false);
-            skipButton.SetActive(false);
-            GameManager.Instance.Play2D();
+            Play2D();
         }
         else if (_activeStoryPanelNumber == 8)
         {
-
+            Play3D();
         }
         else if (_activeStoryPanelNumber == 9)
         {
-
+            PlayFinalPanel();
         }
         else
         {
@@ -102,6 +144,7 @@ public class StoryManager : MonoBehaviour
         }
     }
 
+    // TODO: Still need skip button functionality
     public void SkipButtonClicked()
     {
         if (_activeTypewriterCoroutine != null)
@@ -109,25 +152,52 @@ public class StoryManager : MonoBehaviour
             StopCoroutine(_activeTypewriterCoroutine);
         }
         _activeStoryPanelGameObject.SetActive(false);
-        nextButton.SetActive(false);
-        skipButton.SetActive(false);
+        if (_activeStoryPanelNumber <= 5)
+        {
+            Play2D();
+        }
+        else if (_activeStoryPanelNumber <= 8)
+        {
+            Play3D();
+        }
+        else if (_activeStoryPanelNumber <= 9)
+        {
+            PlayFinalPanel();
+        }
+        // _activeStoryPanelGameObject.SetActive(false);
+        // nextButton.SetActive(false);
+        // skipButton.SetActive(false);
     }
 
     public void StartStory()
     {
+        PlayerPrefs.SetInt("IsFirstTimePlay", 0);
         _activeStoryPanelNumber = 1;
         GoToStoryPanel(_activeStoryPanelNumber);
     }
 
     public void GoToStoryPanel(int storyPanelNumber)
     {
-        var storyPanel = transform.Find($"Panel{_activeStoryPanelNumber}");
+        GameManager.Instance.isStoryMode = true;
+        var storyPanel = transform.Find($"Panel{storyPanelNumber}");
         if (storyPanel != null)
         {
             _activeStoryPanelGameObject = storyPanel.gameObject;
             _activeStoryPanelGameObject.SetActive(true);
-            nextButton.SetActive(true);
-            skipButton.SetActive(true);
+            _activeStoryPanelNumber = storyPanelNumber;
+            if (_activeStoryPanelNumber == 9)
+            {
+                _panel9EffectCoroutine = StartCoroutine(StartPanel9Effect());
+            }
+            if (_activeStoryPanelNumber == 10)
+            {
+                character.SetActive(true);
+            }
+            else
+            {
+                nextButton.SetActive(true);
+                skipButton.SetActive(true);
+            }
             var typewriterTextGameObject = storyPanel.Find("TypewriterText");
             if (typewriterTextGameObject == null) return;
             var typewriterText = typewriterTextGameObject.GetComponent<TextMeshProUGUI>();

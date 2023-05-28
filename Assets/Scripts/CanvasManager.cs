@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class CanvasManager : MonoBehaviour
@@ -21,13 +22,26 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private GameObject threeDControls;
     [SerializeField] private GameObject powerupMatchIcon;
     [SerializeField] private GameObject powerupMultiselectIcon;
+    [SerializeField] private GameObject twoDLevelProgressGameObject;
+    [SerializeField] private GameObject switchTo2DButton;
+    [SerializeField] private GameObject switchTo3DButton;
+    [SerializeField] private GameObject mainMenuButton;
+    [SerializeField] private Sprite twoDLevel1Sprite;
+    [SerializeField] private Sprite twoDLevel2Sprite;
+    [SerializeField] private Sprite twoDLevel3Sprite;
+    [SerializeField] private Sprite twoDLevel3CompleteSprite;
+    [SerializeField] private GameObject twoDLevelInstructionsImage;
+    [SerializeField] private TextMeshProUGUI twoDLevelInstructionsText;
     [SerializeField] private TextMeshProUGUI multiselectTilesAvailableText;
     [SerializeField] private TextMeshProUGUI multiselectInstructionsText;
-    [SerializeField] private TextMeshProUGUI powerupFlashText;
+    [SerializeField] private TextMeshProUGUI instructionsFlashText;
+    [SerializeField] private TextMeshProUGUI persistentLevelText;
 
-    private float _lerpPowerupFlashTextDuration = 0.2f;
-    private Vector3 _lerpPowerupFlashTextStartScale = new Vector3(0.5f, 0.5f, 0.5f);
-    private Vector3 _lerpPwerupFlashTExtEndScale = new Vector3(3f, 3f, 3f);
+    private Vector3 _lerpInstructionsFlashTextStartScale = new Vector3(0.5f, 0.5f, 0.5f);
+    private Vector3 _lerpInstructionsFlashTextEndScale = new Vector3(2f, 2f, 2f);
+    private float _lerpInstructionsFlashTextDuration = 0.2f;
+    private float _instructionsFlashTextDuration = 2f;
+    private bool _is2D = false;
 
     private void Awake()
     {
@@ -37,7 +51,7 @@ public class CanvasManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Play2D();
+
     }
 
     // Update is called once per frame
@@ -46,30 +60,48 @@ public class CanvasManager : MonoBehaviour
 
     }
 
-    private IEnumerator LerpPowerupFlashText()
+    private IEnumerator LerpInstructionsFlashText(string text)
     {
+        persistentLevelText.gameObject.SetActive(false);
         float timeElapsed = 0f;
-        powerupFlashText.transform.localScale = _lerpPowerupFlashTextStartScale;
-        while (timeElapsed < _lerpPowerupFlashTextDuration)
+        instructionsFlashText.SetText(text);
+        instructionsFlashText.gameObject.SetActive(true);
+        instructionsFlashText.transform.localScale = _lerpInstructionsFlashTextStartScale;
+        while (timeElapsed < _lerpInstructionsFlashTextDuration)
         {
-            powerupFlashText.transform.localScale = Vector3.Slerp(
-                _lerpPowerupFlashTextStartScale,
-                _lerpPwerupFlashTExtEndScale,
-                timeElapsed / _lerpPowerupFlashTextDuration);
+            instructionsFlashText.transform.localScale = Vector3.Slerp(
+                _lerpInstructionsFlashTextStartScale,
+                _lerpInstructionsFlashTextEndScale,
+                timeElapsed / _lerpInstructionsFlashTextDuration);
             timeElapsed += Time.deltaTime;
             yield return null;
         }
-        StartCoroutine(Utilities.CoroutineDeactivateGameObjectAfterSeconds(powerupFlashText.gameObject, .5f));
+        StartCoroutine(Utilities.CoroutineDeactivateGameObjectAfterSeconds(instructionsFlashText.gameObject, _instructionsFlashTextDuration));
+        // TODO: This really shouldn't go here. But it works.
+        StartCoroutine(Utilities.CoroutineActivateGameObjectAfterSeconds(persistentLevelText.gameObject, _instructionsFlashTextDuration));
     }
 
-    public void Play3D()
+    public void Play3D(int level)
     {
+        _is2D = false;
         threeDControls.SetActive(true);
+        twoDLevelProgressGameObject.SetActive(false);
+        if (!GameManager.Instance.isZenMode)
+        {
+            UpdatePersistentLevelText(level);
+        }
     }
 
-    public void Play2D()
+    public void Play2D(int level)
     {
+        _is2D = true;
         threeDControls.SetActive(false);
+        if (!GameManager.Instance.isZenMode)
+        {
+            ShowInstructionsFlashText($"Match the tiles!{System.Environment.NewLine}2D LEVEL {level}");
+            UpdatePersistentLevelText(level);
+            Update2DLevelProgress(level);
+        }
     }
 
     public void ShowPowerupIcon(Utilities.PowerupEnum powerup, bool show)
@@ -88,17 +120,17 @@ public class CanvasManager : MonoBehaviour
     }
 
     // Method name is used in UI for image click
-    public void TogglePowerupInstructions(GameObject powerupInstructions)
+    public void ToggleOverlayInstructions(GameObject overlayInstructions)
     {
-        powerupInstructions.SetActive(!powerupInstructions.activeSelf);
-        GameManager.Instance.isPowerupInstructionsActive = powerupInstructions.activeSelf;
+        overlayInstructions.SetActive(!overlayInstructions.activeSelf);
+        GameManager.Instance.isOverlayInstructionsActive = overlayInstructions.activeSelf;
     }
 
     // Method name is used in UI
-    public void HidePowerupInstructions(GameObject powerupInstructions)
+    public void HideOverlayInstructions(GameObject overlayInstructions)
     {
-        powerupInstructions.SetActive(false);
-        GameManager.Instance.isPowerupInstructionsActive = false;
+        overlayInstructions.SetActive(false);
+        GameManager.Instance.isOverlayInstructionsActive = false;
     }
 
     public void UpdateMultiselectTilesAvailableText(int tilesAvailable)
@@ -107,27 +139,61 @@ public class CanvasManager : MonoBehaviour
         multiselectInstructionsText.SetText($"Select up to {tilesAvailable} tiles at once!");
     }
 
-    public void ShowPowerupFlashText(Utilities.PowerupEnum powerup)
+    public void UpdatePersistentLevelText(int level)
     {
-        switch (powerup)
+        var levelText = _is2D ? "2D" : "3D";
+        persistentLevelText.SetText($"{levelText}{System.Environment.NewLine}LEVEL {level}");
+    }
+
+    public void Update2DLevelProgress(int level)
+    {
+        var levelProgressImage = twoDLevelProgressGameObject.GetComponent<Image>();
+        var levelInstructionsBackgroundImage = twoDLevelInstructionsImage.GetComponent<Image>();
+        if (levelProgressImage == null || levelInstructionsBackgroundImage == null) return;
+
+        switch (level)
         {
-            case Utilities.PowerupEnum.match:
-                powerupFlashText.SetText("Automatch!");
+            case 1:
+                levelProgressImage.sprite = twoDLevel1Sprite;
+                levelInstructionsBackgroundImage.sprite = twoDLevel1Sprite;
+                twoDLevelInstructionsText.SetText("Beat this level 3 times to advance!");
                 break;
-            case Utilities.PowerupEnum.multiselect:
-                powerupFlashText.SetText("Multiselect!");
+            case 2:
+                levelProgressImage.sprite = twoDLevel2Sprite;
+                levelInstructionsBackgroundImage.sprite = twoDLevel2Sprite;
+                twoDLevelInstructionsText.SetText("Beat this level 2 more times to advance!");
+                break;
+            case 3:
+                levelProgressImage.sprite = twoDLevel3Sprite;
+                levelInstructionsBackgroundImage.sprite = twoDLevel3Sprite;
+                twoDLevelInstructionsText.SetText("Beat this level 1 more time to advance!");
                 break;
             default:
                 break;
         }
-        powerupFlashText.gameObject.SetActive(true);
-        StartCoroutine(LerpPowerupFlashText());
+
+        twoDLevelProgressGameObject.SetActive(true);
     }
 
-    // // TESTING
-    // public void StartTypewriter()
-    // {
-    //     string text = "This is a test of the emergency broadcast system. This is only a test.";
-    //     StartCoroutine(Typewriter(text, typewriterWordsPerMinute));
-    // }
+    public void ShowInstructionsFlashText(string text)
+    {
+        StartCoroutine(LerpInstructionsFlashText(text));
+    }
+
+    public void Hide3DControls()
+    {
+        threeDControls.SetActive(false);
+    }
+
+    public void HidePersistentLevelInstructionsText()
+    {
+        persistentLevelText.gameObject.SetActive(false);
+    }
+
+    public void ActivateZenMode()
+    {
+        switchTo2DButton.SetActive(true);
+        switchTo3DButton.SetActive(true);
+        mainMenuButton.SetActive(true);
+    }
 }

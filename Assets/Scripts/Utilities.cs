@@ -18,6 +18,12 @@ public static class Utilities
         }
     }
 
+    public static IEnumerator CoroutineActivateGameObjectAfterSeconds(GameObject gameObject, float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        gameObject.SetActive(true);
+    }
+
     public static IEnumerator CoroutineDeactivateGameObjectAfterSeconds(GameObject gameObject, float seconds)
     {
         yield return new WaitForSeconds(seconds);

@@ -5,6 +5,8 @@ using UnityEngine;
 public class Tile : MonoBehaviour
 {
     private Quaternion _originalTileRotation;
+    private MeshRenderer _tileMeshRenderer;
+    private MeshRenderer _emojiMeshRenderer;
     private string _tileMaterialName;
     private string _emojiGameObjectName = "Emoji";
     private string _explosionGameObjectName = "Explosion";
@@ -20,6 +22,8 @@ public class Tile : MonoBehaviour
     {
         isShown = false;
         _originalTileRotation = transform.localRotation;
+        _tileMeshRenderer = transform.GetComponent<MeshRenderer>();
+        _emojiMeshRenderer = transform.Find(_emojiGameObjectName).GetComponent<MeshRenderer>();
     }
 
     // Update is called once per frame
@@ -71,7 +75,11 @@ public class Tile : MonoBehaviour
     private IEnumerator DisableTile()
     {
         yield return new WaitForSeconds(1.1f);
+        _isExploding = false;
+        transform.localRotation = _originalTileRotation;
         gameObject.SetActive(false);
+        if (_emojiMeshRenderer != null) _emojiMeshRenderer.enabled = true;
+        if (_tileMeshRenderer != null) _tileMeshRenderer.enabled = true;
     }
 
     private void SetTileMaterial(Material mat)
@@ -127,16 +135,14 @@ public class Tile : MonoBehaviour
     public void ExplodeTile()
     {
         _isExploding = true;
-        var tileMeshRenderer = transform.GetComponent<MeshRenderer>();
-        var emojiMeshRenderer = transform.Find(_emojiGameObjectName).GetComponent<MeshRenderer>();
         var explosion = transform.Find(_explosionGameObjectName).GetComponent<ParticleSystem>();
         if (explosion != null)
         {
-            explosion.Play();
+            // explosion.Play();
         }
 
-        if (emojiMeshRenderer != null) emojiMeshRenderer.enabled = false;
-        if (tileMeshRenderer != null) tileMeshRenderer.enabled = false;
+        if (_emojiMeshRenderer != null) _emojiMeshRenderer.enabled = false;
+        if (_tileMeshRenderer != null) _tileMeshRenderer.enabled = false;
         StartCoroutine(DisableTile());
     }
 
