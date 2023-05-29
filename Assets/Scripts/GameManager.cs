@@ -296,7 +296,6 @@ public class GameManager : MonoBehaviour
         }
         else // 3D
         {
-            ResetAllPowerups();
             if (_activeLevel == 6)
             {
                 FinishGame();
@@ -310,6 +309,7 @@ public class GameManager : MonoBehaviour
 
     private void FinishGame()
     {
+        ResetAllPowerups();
         _mainCube4x4Component.gameObject.SetActive(false);
         _cameraMovementComponent.Play2D();
         CanvasManager.Instance.Show3DControls(false);
@@ -543,6 +543,7 @@ public class GameManager : MonoBehaviour
         if (isZenMode) AudioManager.Instance.PlayZenGameplayMusic();
         else AudioManager.Instance.PlayRandomGameplayMusic();
         CanvasManager.Instance.ShowMainMenuButton(true);
+        ResetAllPowerups();
 
         isStoryMode = false;
         _is2D = false;
@@ -575,6 +576,7 @@ public class GameManager : MonoBehaviour
         if (isZenMode) AudioManager.Instance.PlayZenGameplayMusic();
         else AudioManager.Instance.PlayRandomGameplayMusic();
         CanvasManager.Instance.ShowMainMenuButton(true);
+        ResetAllPowerups();
 
         isStoryMode = false;
         _is2D = true;
