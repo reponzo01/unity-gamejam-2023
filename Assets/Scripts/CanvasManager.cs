@@ -27,6 +27,7 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private GameObject switchTo3DButton;
     [SerializeField] private GameObject mainMenuButton;
     [SerializeField] private GameObject scoresGameObject;
+    [SerializeField] private GameObject togglePowerupsButton;
     [SerializeField] private Sprite twoDLevel1Sprite;
     [SerializeField] private Sprite twoDLevel2Sprite;
     [SerializeField] private Sprite twoDLevel3Sprite;
@@ -179,6 +180,22 @@ public class CanvasManager : MonoBehaviour
         }
 
         twoDLevelProgressGameObject.SetActive(true);
+    }
+
+    public void UpdateEnablePowerupsButtonText(bool isPowerupsEnabled)
+    {
+        var textObject = togglePowerupsButton.transform.Find("MainText")?.GetComponent<TextMeshProUGUI>();
+        if (textObject != null)
+        {
+            var toggleText = isPowerupsEnabled ? "Disable" : "Enable";
+            textObject.SetText($"{toggleText} Powerups");
+        }
+    }
+
+    public void ShowTogglePowerupsButton(bool show, bool isPowerupsEnabled)
+    {
+        togglePowerupsButton.SetActive(show);
+        UpdateEnablePowerupsButtonText(isPowerupsEnabled);
     }
 
     public void ShowInstructionsFlashText(string text)

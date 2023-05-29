@@ -42,6 +42,7 @@ public class GameManager : MonoBehaviour
     public bool isOverlayInstructionsActive = false;
     public bool isStoryMode = false;
     public bool isZenMode = false;
+    public bool isPowerupsEnabled = true;
     public int bestAttemptsScore = 0;
     public int currentAttemptsScore = 0;
 
@@ -61,6 +62,11 @@ public class GameManager : MonoBehaviour
         bestAttemptsScore = PlayerPrefs.GetInt("BestAttemptsScore", 0);
         CanvasManager.Instance.SetBestAttemptsScore(bestAttemptsScore);
         CanvasManager.Instance.SetCurrentAttemptsScore(0);
+        if (PlayerPrefs.HasKey("IsPowerupsEnabled"))
+        {
+            isPowerupsEnabled = PlayerPrefs.GetInt("IsPowerupsEnabled", 0) == 1 ? true : false;
+        }
+
     }
 
     // Update is called once per frame
@@ -132,6 +138,7 @@ public class GameManager : MonoBehaviour
         }
 
         // TODO: This would be better extracted into a method since it's setting the powerups
+        if (isZenMode && !isPowerupsEnabled) return;
         if (allActiveTiles.Count > 16)
         {
             var numberOfPowerups = Mathf.Ceil(allActiveTiles.Count / 16 * powerupsPerPanel);
@@ -540,8 +547,15 @@ public class GameManager : MonoBehaviour
 
     public void Play3D(int level = 1)
     {
-        if (isZenMode) AudioManager.Instance.PlayZenGameplayMusic();
-        else AudioManager.Instance.PlayRandomGameplayMusic();
+        if (isZenMode)
+        {
+            AudioManager.Instance.PlayZenGameplayMusic();
+            CanvasManager.Instance.ShowTogglePowerupsButton(true, isPowerupsEnabled);
+        }
+        else
+        {
+            AudioManager.Instance.PlayRandomGameplayMusic();
+        }
         CanvasManager.Instance.ShowMainMenuButton(true);
         ResetAllPowerups();
 
@@ -573,8 +587,15 @@ public class GameManager : MonoBehaviour
 
     public void Play2D(int level = 1)
     {
-        if (isZenMode) AudioManager.Instance.PlayZenGameplayMusic();
-        else AudioManager.Instance.PlayRandomGameplayMusic();
+        if (isZenMode)
+        {
+            AudioManager.Instance.PlayZenGameplayMusic();
+            CanvasManager.Instance.ShowTogglePowerupsButton(false, isPowerupsEnabled);
+        }
+        else
+        {
+            AudioManager.Instance.PlayRandomGameplayMusic();
+        }
         CanvasManager.Instance.ShowMainMenuButton(true);
         ResetAllPowerups();
 
@@ -639,6 +660,14 @@ public class GameManager : MonoBehaviour
         }
 
         PopulateActiveTiles();
+    }
+
+    public void ToggleEnablePowerups()
+    {
+        isPowerupsEnabled = !isPowerupsEnabled;
+        PlayerPrefs.SetInt("IsPowerupsEnabled", isPowerupsEnabled ? 1 : 0);
+        CanvasManager.Instance.UpdateEnablePowerupsButtonText(isPowerupsEnabled);
+        Play3D(5);
     }
 
     public void RestartScene()
