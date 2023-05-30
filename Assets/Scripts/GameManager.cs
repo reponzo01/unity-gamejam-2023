@@ -35,6 +35,7 @@ public class GameManager : MonoBehaviour
     private bool _is2D = false;
     private bool _powerupMultiselectActive = false;
     private bool _powerupMatchActive = false;
+    private bool _isPowerupsEnabled = true;
     private int _tilesOnBoard = 0;
     private int _powerupMultiselectTilesAvailable = 0;
     private int _activeLevel = 0;
@@ -42,7 +43,6 @@ public class GameManager : MonoBehaviour
     public bool isOverlayInstructionsActive = false;
     public bool isStoryMode = false;
     public bool isZenMode = false;
-    public bool isPowerupsEnabled = true;
     public int bestAttemptsScore = 0;
     public int currentAttemptsScore = 0;
 
@@ -64,15 +64,18 @@ public class GameManager : MonoBehaviour
         CanvasManager.Instance.SetCurrentAttemptsScore(0);
         if (PlayerPrefs.HasKey("IsPowerupsEnabled"))
         {
-            isPowerupsEnabled = PlayerPrefs.GetInt("IsPowerupsEnabled", 0) == 1 ? true : false;
+            _isPowerupsEnabled = PlayerPrefs.GetInt("IsPowerupsEnabled", 0) == 1 ? true : false;
         }
-
     }
 
     // Update is called once per frame
     private void Update()
     {
         if (_is2D || isStoryMode) return;
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
         {
             Up();
@@ -107,6 +110,10 @@ public class GameManager : MonoBehaviour
 
         if (allActiveTiles.Count <= 0) return;
         _tilesOnBoard = allActiveTiles.Count;
+        if (!isZenMode)
+        {
+            CanvasManager.Instance.UpdateTilesRemainingText(_tilesOnBoard);
+        }
 
         var numEmojisToSelect = Mathf.Ceil(allActiveTiles.Count / 2);
         if (numEmojisToSelect > 0)
@@ -138,7 +145,7 @@ public class GameManager : MonoBehaviour
         }
 
         // TODO: This would be better extracted into a method since it's setting the powerups
-        if (isZenMode && !isPowerupsEnabled) return;
+        if (isZenMode && !_isPowerupsEnabled) return;
         if (allActiveTiles.Count > 16)
         {
             var numberOfPowerups = Mathf.Ceil(allActiveTiles.Count / 16 * powerupsPerPanel);
@@ -264,6 +271,10 @@ public class GameManager : MonoBehaviour
             _flippedTiles.Remove(tile);
         }
         _tilesOnBoard = _tilesOnBoard - tiles.Count;
+        if (!isZenMode)
+        {
+            CanvasManager.Instance.UpdateTilesRemainingText(_tilesOnBoard);
+        }
         if (shakeCamera)
         {
             ShakeCamera();
@@ -549,8 +560,8 @@ public class GameManager : MonoBehaviour
     {
         if (isZenMode)
         {
-            AudioManager.Instance.PlayZenGameplayMusic();
-            CanvasManager.Instance.ShowTogglePowerupsButton(true, isPowerupsEnabled);
+            AudioManager.Instance.PlayZenGameplayMusicIfEnabled();
+            CanvasManager.Instance.ShowTogglePowerupsButton(true, _isPowerupsEnabled);
         }
         else
         {
@@ -589,8 +600,8 @@ public class GameManager : MonoBehaviour
     {
         if (isZenMode)
         {
-            AudioManager.Instance.PlayZenGameplayMusic();
-            CanvasManager.Instance.ShowTogglePowerupsButton(false, isPowerupsEnabled);
+            AudioManager.Instance.PlayZenGameplayMusicIfEnabled();
+            CanvasManager.Instance.ShowTogglePowerupsButton(false, _isPowerupsEnabled);
         }
         else
         {
@@ -664,9 +675,9 @@ public class GameManager : MonoBehaviour
 
     public void ToggleEnablePowerups()
     {
-        isPowerupsEnabled = !isPowerupsEnabled;
-        PlayerPrefs.SetInt("IsPowerupsEnabled", isPowerupsEnabled ? 1 : 0);
-        CanvasManager.Instance.UpdateEnablePowerupsButtonText(isPowerupsEnabled);
+        _isPowerupsEnabled = !_isPowerupsEnabled;
+        PlayerPrefs.SetInt("IsPowerupsEnabled", _isPowerupsEnabled ? 1 : 0);
+        CanvasManager.Instance.UpdateEnablePowerupsButtonText(_isPowerupsEnabled);
         Play3D(5);
     }
 

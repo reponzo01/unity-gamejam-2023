@@ -28,6 +28,7 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private GameObject mainMenuButton;
     [SerializeField] private GameObject scoresGameObject;
     [SerializeField] private GameObject togglePowerupsButton;
+    [SerializeField] private GameObject toggleZenMusicButton;
     [SerializeField] private Sprite twoDLevel1Sprite;
     [SerializeField] private Sprite twoDLevel2Sprite;
     [SerializeField] private Sprite twoDLevel3Sprite;
@@ -40,6 +41,7 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI persistentLevelText;
     [SerializeField] private TextMeshProUGUI bestAttemptsText;
     [SerializeField] private TextMeshProUGUI currentAttemptsText;
+    [SerializeField] private TextMeshProUGUI tilesRemainingText;
 
     private Vector3 _lerpInstructionsFlashTextStartScale = new Vector3(0.5f, 0.5f, 0.5f);
     private Vector3 _lerpInstructionsFlashTextEndScale = new Vector3(2f, 2f, 2f);
@@ -192,6 +194,21 @@ public class CanvasManager : MonoBehaviour
         }
     }
 
+    public void UpdateToggleZenMusicButtonText(bool isZenMusicEnabled)
+    {
+        var textObject = toggleZenMusicButton.transform.Find("MainText")?.GetComponent<TextMeshProUGUI>();
+        if (textObject != null)
+        {
+            var toggleText = isZenMusicEnabled ? "Stop" : "Play";
+            textObject.SetText($"{toggleText} Music");
+        }
+    }
+
+    public void UpdateTilesRemainingText(int tilesRemaining)
+    {
+        tilesRemainingText.SetText($"Tiles remaining: {tilesRemaining}");
+    }
+
     public void ShowTogglePowerupsButton(bool show, bool isPowerupsEnabled)
     {
         togglePowerupsButton.SetActive(show);
@@ -223,6 +240,11 @@ public class CanvasManager : MonoBehaviour
         mainMenuButton.SetActive(show);
     }
 
+    public void ShowTilesRemainingText(bool show)
+    {
+        tilesRemainingText.gameObject.SetActive(show);
+    }
+
     public void SetBestAttemptsScore(int score)
     {
         bestAttemptsText.SetText(score.ToString());
@@ -237,5 +259,6 @@ public class CanvasManager : MonoBehaviour
     {
         switchTo2DButton.SetActive(true);
         switchTo3DButton.SetActive(true);
+        toggleZenMusicButton.SetActive(true);
     }
 }

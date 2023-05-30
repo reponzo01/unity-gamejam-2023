@@ -23,6 +23,7 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip[] clipsExplosion;
 
     private AudioSource[] _allAudioSources;
+    private bool _isZenMusicEnabled = true;
 
     public static AudioManager Instance
     {
@@ -44,7 +45,11 @@ public class AudioManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        if (PlayerPrefs.HasKey("IsZenMusicEnabled"))
+        {
+            _isZenMusicEnabled = PlayerPrefs.GetInt("IsZenMusicEnabled", 0) == 1 ? true : false;
+        }
+        CanvasManager.Instance.UpdateToggleZenMusicButtonText(_isZenMusicEnabled);
     }
 
     // Update is called once per frame
@@ -85,8 +90,9 @@ public class AudioManager : MonoBehaviour
         if (!musicPanelFinal.isPlaying) musicPanelFinal.Play();
     }
 
-    public void PlayZenGameplayMusic()
+    public void PlayZenGameplayMusicIfEnabled()
     {
+        if (!_isZenMusicEnabled) return;
         if (!musicZenGameplay.isPlaying)
         {
             StopAllAudio();
@@ -140,5 +146,13 @@ public class AudioManager : MonoBehaviour
         var clipNumber = Random.Range(0, clipsExplosion.Length);
         sfxExplosion.clip = clipsExplosion[clipNumber];
         sfxExplosion.Play();
+    }
+
+    public void ToggleZenMusic()
+    {
+        if (musicZenGameplay.isPlaying) musicZenGameplay.Stop();
+        else musicZenGameplay.Play();
+        CanvasManager.Instance.UpdateToggleZenMusicButtonText(musicZenGameplay.isPlaying);
+        PlayerPrefs.SetInt("IsZenMusicEnabled", musicZenGameplay.isPlaying ? 1 : 0);
     }
 }

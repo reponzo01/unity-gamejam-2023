@@ -235,6 +235,7 @@ public class StoryManager : MonoBehaviour
             {
                 AudioManager.Instance.PlayMusicPanelFinal();
                 CanvasManager.Instance.ShowScores(true);
+                CanvasManager.Instance.ShowTilesRemainingText(false);
                 character.SetActive(true);
             }
             else
